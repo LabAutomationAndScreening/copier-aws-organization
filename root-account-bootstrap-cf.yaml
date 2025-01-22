@@ -4,6 +4,9 @@ Parameters:
   RepoName:
     Type: String
     Description: "The GitHub repository name in the format 'owner/repo'."
+  OrganizationId:
+    Type: String
+    Description: "The AWS Organization ID."
 Resources:
   OrgRootInfraDeployRole:
     Type: "AWS::IAM::Role"
@@ -31,6 +34,10 @@ Resources:
     Properties:
       BucketName:
         Fn::Sub: "infra-state-${AWS::AccountId}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: "AES256"
   InfraStateBucketNameParameter:
     Type: "AWS::SSM::Parameter"
     Properties:
@@ -38,6 +45,53 @@ Resources:
       Type: "String"
       Value:
         Ref: InfraStateBucket
+  InfraStateKMSKey:
+    Type: "AWS::KMS::Key"
+    Properties:
+      Description: "Single generic org-wide KMS key for encrypting secrets stored in infrastructure state."
+      MultiRegion: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "AllowRootAccountAccess"
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Sub: "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource: "*"
+          - Sid: "AllowOrgAccess"
+            Effect: Allow
+            Principal:
+              AWS: "*"
+            Action:
+              - "kms:Decrypt"
+              - "kms:Encrypt"
+              - "kms:GenerateDataKey"
+              - "kms:DescribeKey"
+            Resource: "*"
+            Condition:
+              StringEquals:
+                aws:PrincipalOrgID:
+                  Ref: OrganizationId
+      Enabled: true
+      KeyUsage: "ENCRYPT_DECRYPT"
+  InfraStateKMSKeyAlias:
+    Type: "AWS::KMS::Alias"
+    Properties:
+      AliasName: "alias/org-wide-infra-state"
+      TargetKeyId:
+        Ref: InfraStateKMSKey
+  InfraStateKMSKeyArnParameter:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: "/org-managed/infra-state-kms-key-arn"
+      Type: "String"
+      Value:
+        Fn::GetAtt:
+          - InfraStateKMSKey
+          - Arn
   GitHubOIDCProvider:
     Type: "AWS::IAM::OIDCProvider"
     Properties:
