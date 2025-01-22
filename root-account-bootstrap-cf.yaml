@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "CloudFormation template to create IAM Roles, an S3 bucket, and an OIDC provider for GitHub."
+Parameters:
+  OrganizationId:
+    Type: String
+    Description: "The AWS Organization ID."
+  RepoName:
+    Type: String
+    Description: "The GitHub repository name in the format 'owner/repo'."
+Resources:
+  OrgRootInfraDeployRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "OrgRootInfraDeploy"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated:
+                Ref: GitHubOIDCProvider
+            Action: "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:sub:
+                  Sub: "repo:${RepoName}:*"
+                token.actions.githubusercontent.com:aud: "sts.amazonaws.com"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AdministratorAccess"
+
+  InfraStateBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName:
+        Sub: "infra-state-${AWS::AccountId}"
+  GitHubOIDCProvider:
+    Type: "AWS::IAM::OIDCProvider"
+    Properties:
+      Url: "https://token.actions.githubusercontent.com"
+      ClientIdList:
+        - "sts.amazonaws.com"
+      ThumbprintList:
+        - "6938fd4d98bab03faadb97b34396831e3780aea1"
+Outputs:
+  OrgRootInfraDeployRole:
+    Description: "IAM Role with AdministratorAccess permissions."
+    Value:
+      Ref: OrgRootInfraDeployRole
+  InfraStateBucket:
+    Description: "S3 bucket created for infrastructure state."
+    Value:
+      Ref: InfraStateBucket

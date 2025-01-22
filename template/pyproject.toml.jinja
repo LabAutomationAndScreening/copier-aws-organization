@@ -1,0 +1,24 @@
+{% raw %}[project]
+name = "aws-organization"
+version = "0.1.0"
+description = "Managing the AWS Organization and Accounts"
+
+readme = "README.md"
+requires-python = ">={% endraw %}{{ python_version }}{% raw %}"
+
+dependencies = [
+    # Specific to this template
+
+
+    # Managed by upstream template
+    "pyright>={% endraw %}{{ pyright_version }}{% raw %}",
+    "pytest>={% endraw %}{{ pytest_version }}{% raw %}",
+    "pytest-cov>={% endraw %}{{ pytest_cov_version }}{% raw %}",
+    "pytest-randomly>={% endraw %}{{ pytest_randomly_version }}{% raw %}",
+    "pulumi>={% endraw %}{{ pulumi_version }}{% raw %}",
+    "pulumi-aws>={% endraw %}{{ pulumi_aws_version }}{% raw %}",
+    "pulumi-aws-native>={% endraw %}{{ pulumi_aws_native_version }}{% raw %}",
+]
+
+[tool.uv]
+package = true{% endraw %}
