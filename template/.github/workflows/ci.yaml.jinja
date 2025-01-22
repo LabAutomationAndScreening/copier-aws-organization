@@ -59,7 +59,7 @@ jobs:
         with:
           python-version: {% endraw %}{{ python_version }}{% raw %}
 
-        - name: AWS OIDC
+      - name: AWS OIDC
         uses: aws-actions/configure-aws-credentials@{% endraw %}{{ gha_configure_aws_credentials }}{% raw %}
         with:
             role-to-assume: arn:aws:iam::{% endraw %}{{ aws_management_account_id }}{% raw %}:role/OrgRootInfraDeploy
