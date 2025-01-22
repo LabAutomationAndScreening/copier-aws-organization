@@ -49,7 +49,7 @@ jobs:
 
   pulumi-preview:
     needs: [ lint ]
-     runs-on: {% endraw %}{{ gha_linux_runner }}{% raw %}
+    runs-on: {% endraw %}{{ gha_linux_runner }}{% raw %}
     steps:
       - name: Checkout code
         uses: actions/checkout@{% endraw %}{{ gha_checkout }}{% raw %}
