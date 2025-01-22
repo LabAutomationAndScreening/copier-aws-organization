@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "CloudFormation template to create IAM Roles, an S3 bucket, and an OIDC provider for GitHub."
 Parameters:
-  OrganizationId:
-    Type: String
-    Description: "The AWS Organization ID."
   RepoName:
     Type: String
     Description: "The GitHub repository name in the format 'owner/repo'."
