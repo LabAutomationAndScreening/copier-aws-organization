@@ -19,6 +19,10 @@ class ContextUpdater(ContextHook):
         context["copier_version"] = "9.4.1"
         context["copier_templates_extension_version"] = "0.3.0"
         context["sphinx_version"] = "8.1.3"
+        context["pulumi_version"] = "3.147.0"
+        context["pulumi_aws_version"] = "6.66.3"
+        context["pulumi_aws_native_version"] = "1.24.0"
+        context["pulumi_command_version"] = "1.0.1"
 
         context["gha_checkout"] = "v4.2.2"
         context["gha_setup_python"] = "v5.3.0"
