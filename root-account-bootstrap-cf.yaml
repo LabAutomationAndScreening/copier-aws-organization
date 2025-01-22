@@ -18,9 +18,10 @@ Resources:
                 Ref: GitHubOIDCProvider
             Action: "sts:AssumeRoleWithWebIdentity"
             Condition:
-              StringEquals:
+              StringLike:
                 token.actions.githubusercontent.com:sub:
                   Fn::Sub: "repo:${RepoName}:*"
+              StringEquals:
                 token.actions.githubusercontent.com:aud: "sts.amazonaws.com"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/AdministratorAccess"
