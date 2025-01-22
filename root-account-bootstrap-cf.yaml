@@ -20,7 +20,7 @@ Resources:
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:sub:
-                  Sub: "repo:${RepoName}:*"
+                  Fn::Sub: "repo:${RepoName}:*"
                 token.actions.githubusercontent.com:aud: "sts.amazonaws.com"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/AdministratorAccess"
@@ -29,7 +29,14 @@ Resources:
     Type: "AWS::S3::Bucket"
     Properties:
       BucketName:
-        Sub: "infra-state-${AWS::AccountId}"
+        Fn::Sub: "infra-state-${AWS::AccountId}"
+  InfraStateBucketNameParameter:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: "/org-managed/infra-state-bucket-name"
+      Type: "String"
+      Value:
+        Ref: InfraStateBucket
   GitHubOIDCProvider:
     Type: "AWS::IAM::OIDCProvider"
     Properties:

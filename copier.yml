@@ -24,6 +24,9 @@ python_version:
 
 # Questions specific to this template
 
+aws_management_account_id:
+    type: str
+    help: What is the AWS account ID of the management account?
 
 # Additional Settings
 _min_copier_version: "9.4"

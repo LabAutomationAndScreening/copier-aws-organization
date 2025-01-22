@@ -5,3 +5,4 @@ ssh_port_number: 12345
 use_windows_in_ci: false
 
 # Data added based on the specifics of this template
+aws_management_account_id: 789893201852
