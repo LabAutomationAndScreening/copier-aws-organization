@@ -11,3 +11,5 @@ use_staging_environment: false
 
 
 # Data added based on the specifics of this template
+
+pulumi_stack_name: production

@@ -33,6 +33,10 @@ aws_production_account_id:
 
 # Questions specific to this template
 
+pulumi_stack_name:
+    type: str
+    help: What do you want to call the Pulumi stack?
+    default: production
 
 # Additional Settings
 _min_copier_version: "9.4"
