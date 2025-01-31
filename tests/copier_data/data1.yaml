@@ -10,4 +10,3 @@ use_staging_environment: false
 
 
 # Data added based on the specifics of this template
-aws_management_account_id: 789893201852
