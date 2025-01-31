@@ -23,11 +23,32 @@ Resources:
             Condition:
               StringLike:
                 token.actions.githubusercontent.com:sub:
-                  Fn::Sub: "repo:${RepoName}:*"
+                  Fn::Sub: "repo:${RepoName}:ref:refs/heads/main"
               StringEquals:
                 token.actions.githubusercontent.com:aud: "sts.amazonaws.com"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/AdministratorAccess"
+
+  OrgRootInfraPreviewRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "OrgRootInfraPreview"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated:
+                Ref: GitHubOIDCProvider
+            Action: "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringLike:
+                token.actions.githubusercontent.com:sub:
+                  Fn::Sub: "repo:${RepoName}:*"
+              StringEquals:
+                token.actions.githubusercontent.com:aud: "sts.amazonaws.com"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/ReadOnlyAccess"
 
   InfraStateBucket:
     Type: "AWS::S3::Bucket"
