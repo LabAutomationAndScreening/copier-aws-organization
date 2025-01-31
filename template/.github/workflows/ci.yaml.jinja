@@ -76,7 +76,7 @@ jobs:
         with:
           project-dir: ""
           deploy-script-module-name: aws_organization
-          stack-name: production
+          stack-name: {% endraw %}{{ pulumi_stack_name }}{% raw %}
           aws-role-name: OrgRootInfraDeploy
           aws-region: us-east-1
           aws-account-id: {% endraw %}{{ aws_production_account_id }}{% raw %}
