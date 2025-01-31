@@ -65,6 +65,12 @@ jobs:
             role-to-assume: arn:aws:iam::{% endraw %}{{ aws_production_account_id }}{% raw %}:role/OrgRootInfraDeploy
             aws-region: us-east-1
 
+      - name: Set up mutex # Github concurrency management is horrible, things get arbitrarily cancelled if queued up. So using mutex until github fixes itself. When multiple jobs are modifying cache at once, weird things can happen.  possible issue is https://github.com/actions/toolkit/issues/658
+        uses: ben-z/gh-action-mutex@{% endraw %}{{ gha_mutex }}{% raw %}
+        with:
+          branch: mutex-pulumi-${{ inputs.stack-name }}
+        timeout-minutes: 30 # this is the amount of time this action will wait to attempt to acquire the mutex lock before failing, e.g. if other jobs are queued up in front of it
+
       - name: Preview
         uses: ./.github/actions/pulumi_ephemeral_deploy
         with:
