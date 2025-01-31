@@ -22,6 +22,36 @@ python_version:
     help: What version of Python is used for development?
     default: "3.12.7"
 
+aws_identity_center_id:
+    type: str
+    help: What's the ID of your Organization's AWS Identity center, e.g. d-9145c20053?
+
+aws_production_account_id:
+    type: str
+    help: What's the AWS Account ID for the Production environment?
+
+use_staging_environment:
+    type: bool
+    help: Does this workload use a Staging environment for its infrastructure?
+    default: yes
+
+aws_staging_account_id:
+    type: str
+    help: What's the AWS Account ID for the Staging environment?
+    when: "{{ use_staging_environment }}"
+
+aws_test_account_id:
+    type: str
+    help: What's the AWS Account ID for the ephemeral Test environment?
+    when: "{{ use_staging_environment }}"
+
+aws_development_account_id:
+    type: str
+    help: What's the AWS Account ID for local development (often the same as the ephemeral test environment)?
+    when: "{{ use_staging_environment }}"
+
+
+
 # Questions specific to this template
 
 aws_management_account_id:
