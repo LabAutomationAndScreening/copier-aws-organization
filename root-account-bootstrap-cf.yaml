@@ -59,8 +59,9 @@ Resources:
                   - "kms:Decrypt"
                   - "kms:DescribeKey"
                 Resource:
-                  Ref: InfraStateKMSKey
-
+                  Fn::GetAtt:
+                    - InfraStateKMSKey
+                    - Arn
   InfraStateBucket:
     Type: "AWS::S3::Bucket"
     Properties:
