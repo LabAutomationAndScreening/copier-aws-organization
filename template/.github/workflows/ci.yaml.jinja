@@ -48,7 +48,7 @@ jobs:
         run:  pre-commit run -a
 
   pulumi-preview:
-    uses: ./.github/workflows/pulumi.yml
+    uses: ./.github/workflows/pulumi-aws.yml
     needs: [ lint ]
     with:
       PULUMI_PREVIEW: true
