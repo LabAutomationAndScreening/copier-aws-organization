@@ -1,4 +1,4 @@
-name: Pulumi Advanced Test Env
+name: Pulumi Advanced Test Env on AWS
 
 on:
   workflow_call:
