@@ -51,7 +51,7 @@ jobs:
     uses: ./.github/workflows/pulumi.yml
     needs: [ lint ]
     with:
-      PULUMI_PLAN: true
+      PULUMI_PREVIEW: true
       AWS_REGION: us-east-1
       PULUMI_STACK_NAME: {% endraw %}{{ pulumi_stack_name }}{% raw %}
       PYTHON_VERSION: {% endraw %}{{ python_version }}{% raw %}
