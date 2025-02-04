@@ -1,5 +1,9 @@
+"""Information in here is also used in the Central Infrastructure Account."""
+
 from pydantic import BaseModel
 from pydantic import Field
+
+WORKLOAD_INFO_SSM_PARAM_PREFIX = "/org-managed/logical-workloads"
 
 
 class AwsAccountInfo(BaseModel, frozen=True):
