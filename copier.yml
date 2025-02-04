@@ -47,6 +47,14 @@ central_infra_github_organization_name:
     type: str
     help: What is the name of the Github organization for the Central Infrastructure repository of this AWS organization?
 
+account_email_prefix:
+    type: str
+    help: What is the email prefix to use for AWS account creation (i.e. before the plus symbol)?
+
+account_email_domain:
+    type: str
+    help: What is the email domain to use for AWS account creation (i.e. after the at symbol)?
+
 # Additional Settings
 _min_copier_version: "9.4"
 

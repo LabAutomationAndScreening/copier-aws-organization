@@ -13,5 +13,7 @@ use_staging_environment: false
 # Data added based on the specifics of this template
 
 pulumi_stack_name: production
+account_email_prefix: the-prez
+account_email_domain: whitehouse.gov
 central_infra_repo_name: infra
 central_infra_github_organization_name: thebestever
