@@ -47,25 +47,26 @@ jobs:
       - name: Run pre-commit
         run:  pre-commit run -a
 
-  pulumi-preview:
+  pulumi-workflow:
     uses: ./.github/workflows/pulumi-aws.yml
     needs: [ lint ]
     with:
-      PULUMI_PREVIEW: true
       AWS_REGION: us-east-1
       PULUMI_STACK_NAME: {% endraw %}{{ pulumi_stack_name }}{% raw %}
       PYTHON_VERSION: {% endraw %}{{ python_version }}{% raw %}
       DEPLOY_SCRIPT_MODULE_NAME: aws_organization
+      PULUMI_PREVIEW: true
       PREVIEW_ROLE_NAME: OrgRootInfraPreview
+      PULUMI_UP: ${{ github.ref == 'refs/heads/main' }}
+      PULUMI_UP_ROLE_NAME: OrgRootInfraDeploy
       AWS_ACCOUNT_ID: "{% endraw %}{{ aws_production_account_id }}{% raw %}"
-
 
   required-check:
     runs-on: {% endraw %}{{ gha_linux_runner }}{% raw %}
-    needs: [ lint, pulumi-preview ]
+    needs: [ lint, pulumi-workflow ]
     if: always()
     steps:
       - name: fail if prior job failure
-        if: needs.lint.result != 'success' || needs.pulumi-preview.result != 'success'
+        if: needs.lint.result != 'success' || needs.pulumi-workflow.result != 'success'
         run: |
           exit 1{% endraw %}
