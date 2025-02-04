@@ -13,3 +13,5 @@ use_staging_environment: false
 # Data added based on the specifics of this template
 
 pulumi_stack_name: production
+central_infra_repo_name: infra
+central_infra_github_organization_name: thebestever

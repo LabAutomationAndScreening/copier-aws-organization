@@ -38,6 +38,15 @@ pulumi_stack_name:
     help: What do you want to call the Pulumi stack?
     default: production
 
+central_infra_repo_name:
+    type: str
+    help: What is the name of the Github repository for the Central Infrastructure of this AWS organization?
+    default: aws-central-infrastructure
+
+central_infra_github_organization_name:
+    type: str
+    help: What is the name of the Github organization for the Central Infrastructure repository of this AWS organization?
+
 # Additional Settings
 _min_copier_version: "9.4"
 
