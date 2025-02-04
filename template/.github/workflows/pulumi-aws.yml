@@ -7,19 +7,6 @@ on:
         required: false
         default: us-east-1
         type: string
-      INIT_TEST_STACK_USING_TARGET:
-        required: false
-        default: false
-        type: boolean
-      INIT_TEST_STACK_NAME:
-        required: false
-        default: main
-        type: string
-      SPECIFIED_BRANCH_NAME:
-        description: 'specify a branch name to run this workflow on that is different than the commit triggering it. this should be combined with setting the INIT_TEST_STACK_NAME to the same name and INIT_TEST_STACK_USING_TARGET to True...it is hacky for now but then that will result in just doing a single full run through on the branch specified here'
-        required: false
-        default: do-not-do-this
-        type: string
       PULUMI_PREVIEW:
         required: false
         default: false
@@ -42,6 +29,10 @@ on:
         required: false
         default: false
         type: boolean
+      PULUMI_UP_ROLE_NAME:
+        required: false
+        default: ''
+        type: string
       PULUMI_INTEGRATION_TEST:
         required: false
         default: false
@@ -86,11 +77,26 @@ jobs:
 
       - name: Preview
         uses: ./.github/actions/pulumi_ephemeral_deploy
+        if: ${{ inputs.PULUMI_PREVIEW }}
         with:
-          project-dir: ""
+          project-dir: "."
           deploy-script-module-name: ${{ inputs.DEPLOY_SCRIPT_MODULE_NAME }}
           stack-name: ${{ inputs.PULUMI_STACK_NAME }}
           aws-role-name: ${{ inputs.PREVIEW_ROLE_NAME }}
           deploy-script-name: ${{ inputs.DEPLOY_SCRIPT_NAME }}
           aws-region: us-east-1
           aws-account-id: ${{ inputs.AWS_ACCOUNT_ID }}
+        timeout-minutes: 5 # apparently timeout-minutes only accepts literal values, it cannot evaluate expressions (e.g. workflow inputs)
+
+      - name: Pulumi Up
+        uses: ./.github/actions/pulumi_ephemeral_deploy
+        if: ${{ inputs.PULUMI_UP }}
+        with:
+          project-dir: "."
+          deploy-script-module-name: ${{ inputs.DEPLOY_SCRIPT_MODULE_NAME }}
+          stack-name: ${{ inputs.PULUMI_STACK_NAME }}
+          aws-role-name: ${{ inputs.PULUMI_UP_ROLE_NAME }}
+          deploy-script-name: ${{ inputs.DEPLOY_SCRIPT_NAME }}
+          aws-region: us-east-1
+          aws-account-id: ${{ inputs.AWS_ACCOUNT_ID }}
+          cli-action: "--apply"

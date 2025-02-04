@@ -10,7 +10,7 @@ class ContextUpdater(ContextHook):
 
     @override
     def hook(self, context: dict[Any, Any]) -> dict[Any, Any]:
-        context["uv_version"] = "0.5.26"
+        context["uv_version"] = "0.5.27"
         context["pre_commit_version"] = "4.0.1"
         context["pyright_version"] = "1.1.393"
         context["pytest_version"] = "8.3.4"
@@ -24,6 +24,7 @@ class ContextUpdater(ContextHook):
         context["pulumi_aws_native_version"] = "1.24.0"
         context["pulumi_command_version"] = "1.0.1"
         context["boto3_version"] = "1.36.3"
+        context["ephemeral_pulumi_deploy_version"] = "0.0.1"
 
         context["gha_checkout"] = "v4.2.2"
         context["gha_setup_python"] = "v5.3.0"
