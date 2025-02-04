@@ -57,7 +57,7 @@ jobs:
       PYTHON_VERSION: {% endraw %}{{ python_version }}{% raw %}
       DEPLOY_SCRIPT_MODULE_NAME: aws_organization
       PREVIEW_ROLE_NAME: OrgRootInfraPreview
-      AWS_ACCOUNT_ID: {% endraw %}{{ aws_production_account_id }}{% raw %}
+      AWS_ACCOUNT_ID: "{% endraw %}{{ aws_production_account_id }}{% raw %}"
 
 
   required-check:
