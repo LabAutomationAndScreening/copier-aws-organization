@@ -32,7 +32,7 @@
   "reportImportCycles": true,
   "reportUnusedClass": true,
   "reportUnusedFunction": true,
-  "reportUnusedVariable": true,
+  "reportUnusedVariable": false, // already covered by ruff rule F841
   "reportWildcardImportFromLibrary": true,
   "reportAbstractUsage": true,
   "reportArgumentType": true,
