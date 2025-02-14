@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "CloudFormation template to create IAM Roles, an S3 bucket, and an OIDC provider for GitHub."
+Parameters:
+  RepoName:
+    Type: String
+    Description: "The GitHub repository name in the format 'owner/repo'."
+  OrganizationId:
+    Type: String
+    Description: "The AWS Organization ID."
+Resources:
+  OrgRootInfraDeployRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "OrgRootInfraDeploy"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated:
+                Ref: GitHubOIDCProvider
+            Action: "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:sub:
+                  Fn::Sub: "repo:${RepoName}:ref:refs/heads/main"
+                token.actions.githubusercontent.com:aud: "sts.amazonaws.com"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AdministratorAccess"
+
+  OrgRootInfraPreviewRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "OrgRootInfraPreview"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated:
+                Ref: GitHubOIDCProvider
+            Action: "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringLike:
+                token.actions.githubusercontent.com:sub:
+                  Fn::Sub: "repo:${RepoName}:*"
+              StringEquals:
+                token.actions.githubusercontent.com:aud: "sts.amazonaws.com"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/ReadOnlyAccess"
+      Policies:
+        - PolicyName: "DecryptKMSAccess"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "kms:Decrypt"
+                  - "kms:DescribeKey"
+                Resource:
+                  Fn::GetAtt:
+                    - InfraStateKMSKey
+                    - Arn
+  InfraStateBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName:
+        Fn::Sub: "infra-state-${AWS::AccountId}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: "AES256"
+  InfraStateBucketNameParameter:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: "/org-managed/infra-state-bucket-name"
+      Type: "String"
+      Value:
+        Ref: InfraStateBucket
+  InfraStateKMSKey:
+    Type: "AWS::KMS::Key"
+    Properties:
+      Description: "Single generic org-wide KMS key for encrypting secrets stored in infrastructure state."
+      MultiRegion: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "AllowRootAccountAccess"
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Sub: "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource: "*"
+          - Sid: "AllowOrgAccess"
+            Effect: Allow
+            Principal:
+              AWS: "*"
+            Action:
+              - "kms:Decrypt"
+              - "kms:Encrypt"
+              - "kms:GenerateDataKey"
+              - "kms:DescribeKey"
+            Resource: "*"
+            Condition:
+              StringEquals:
+                aws:PrincipalOrgID:
+                  Ref: OrganizationId
+      Enabled: true
+      KeyUsage: "ENCRYPT_DECRYPT"
+  InfraStateKMSKeyAlias:
+    Type: "AWS::KMS::Alias"
+    Properties:
+      AliasName: "alias/org-wide-infra-state"
+      TargetKeyId:
+        Ref: InfraStateKMSKey
+  InfraStateKMSKeyArnParameter:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: "/org-managed/infra-state-kms-key-arn"
+      Type: "String"
+      Value:
+        Fn::GetAtt:
+          - InfraStateKMSKey
+          - Arn
+  GitHubOIDCProvider:
+    Type: "AWS::IAM::OIDCProvider"
+    Properties:
+      Url: "https://token.actions.githubusercontent.com"
+      ClientIdList:
+        - "sts.amazonaws.com"
+      ThumbprintList:
+        - "6938fd4d98bab03faadb97b34396831e3780aea1"
+Outputs:
+  OrgRootInfraDeployRole:
+    Description: "IAM Role with AdministratorAccess permissions."
+    Value:
+      Ref: OrgRootInfraDeployRole
+  InfraStateBucket:
+    Description: "S3 bucket created for infrastructure state."
+    Value:
+      Ref: InfraStateBucket

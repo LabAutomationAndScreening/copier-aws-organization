@@ -1,0 +1,111 @@
+# Questions managed by upstream template
+repo_name:
+    type: str
+    help: What is the name of the repository?
+
+repo_org_name:
+    type: str
+    help: What's the organization or username that owns this repository (look in the URL)?
+
+description:
+    type: str
+    help: What is the description of this repository?
+
+ssh_port_number:
+    type: int
+    help: What port should the devcontainer bind SSH to?
+    default: "{{ range(49152, 65536) | random }}"
+
+use_windows_in_ci:
+    type: bool
+    help: Should CI in the instantiated template also use Windows runners?
+    default: no
+
+python_version:
+    type: str
+    help: What version of Python is used for development?
+    default: "3.12.7"
+
+aws_identity_center_id:
+    type: str
+    help: What's the ID of your Organization's AWS Identity center, e.g. d-9145c20053?
+
+aws_org_home_region:
+    type: str
+    help: What is the home region of the AWS Organization (where all of the central infrastructure is deployed)?
+    default: us-east-1
+
+aws_production_account_id:
+    type: str
+    help: What's the AWS Account ID for the Production environment?
+
+use_staging_environment:
+    type: bool
+    help: Does this workload use a Staging environment for its infrastructure?
+    default: yes
+
+aws_staging_account_id:
+    type: str
+    help: What's the AWS Account ID for the Staging environment?
+    when: "{{ use_staging_environment }}"
+
+aws_test_account_id:
+    type: str
+    help: What's the AWS Account ID for the ephemeral Test environment?
+    when: "{{ use_staging_environment }}"
+
+aws_development_account_id:
+    type: str
+    help: What's the AWS Account ID for local development (often the same as the ephemeral test environment)?
+    when: "{{ use_staging_environment }}"
+    default: "{{ aws_test_account_id }}"
+
+aws_region_for_stack:
+    type: str
+    help: What AWS region should be used for this workload?
+    default: "{{ aws_org_home_region }}"
+
+
+
+# Questions specific to this template
+pulumi_stack_name:
+    type: str
+    help: What do you want to call the Pulumi stack?
+    default: production
+
+central_infra_repo_name:
+    type: str
+    help: What is the name of the Github repository for the Central Infrastructure of this AWS organization?
+    default: aws-central-infrastructure
+
+central_infra_github_organization_name:
+    type: str
+    help: What is the name of the Github organization for the Central Infrastructure repository of this AWS organization?
+
+account_email_prefix:
+    type: str
+    help: What is the email prefix to use for AWS account creation (i.e. before the plus symbol)?
+
+account_email_domain:
+    type: str
+    help: What is the email domain to use for AWS account creation (i.e. after the at symbol)?
+
+configure_cloud_courier:
+    type: bool
+    help: Should this AWS organization be automatically configured to include a Workload for Cloud Courier?
+    default: no
+
+# Additional Settings
+_min_copier_version: "9.4"
+
+_subdirectory: template
+
+_templates_suffix: .jinja
+
+_exclude:
+    - "copier.yml"
+
+# adapted from https://github.com/copier-org/copier-templates-extensions#context-hook-extension
+_jinja_extensions:
+- copier_templates_extensions.TemplateExtensionLoader
+- extensions/context.py:ContextUpdater
