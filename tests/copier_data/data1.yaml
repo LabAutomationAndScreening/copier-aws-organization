@@ -19,3 +19,4 @@ account_email_prefix: wakka173
 account_email_domain: gmail.com
 central_infra_repo_name: blah-infra
 central_infra_github_organization_name: org-blahblah
+configure_cloud_courier: true

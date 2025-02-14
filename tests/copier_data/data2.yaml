@@ -23,3 +23,4 @@ account_email_prefix: the-prez
 account_email_domain: whitehouse.gov
 central_infra_repo_name: infra
 central_infra_github_organization_name: thebestever
+configure_cloud_courier: false

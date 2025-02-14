@@ -90,6 +90,11 @@ account_email_domain:
     type: str
     help: What is the email domain to use for AWS account creation (i.e. after the at symbol)?
 
+configure_cloud_courier:
+    type: bool
+    help: Should this AWS organization be automatically configured to include a Workload for Cloud Courier?
+    default: no
+
 # Additional Settings
 _min_copier_version: "9.4"
 
