@@ -1,17 +1,11 @@
 import logging
-import time
-from typing import Any
-from typing import override
+from typing import TypedDict
 
 from ephemeral_pulumi_deploy.utils import common_tags
 from ephemeral_pulumi_deploy.utils import common_tags_native
 from pulumi import ComponentResource
 from pulumi import Output
-from pulumi import Resource
 from pulumi import ResourceOptions
-from pulumi import dynamic
-from pulumi import export
-from pulumi.dynamic import CreateResult
 from pulumi_aws.iam import GetPolicyDocumentResult
 from pulumi_aws.iam import GetPolicyDocumentStatementArgs
 from pulumi_aws.iam import get_policy_document
@@ -21,7 +15,8 @@ from pulumi_aws_native import iam
 from pulumi_aws_native import organizations
 from pulumi_aws_native import ssm
 
-from .constants import CENTRAL_INFRA_REPO_NAME
+from ..constants import CENTRAL_INFRA_REPO_NAME
+from .account import AwsAccount
 from .shared_lib import WORKLOAD_INFO_SSM_PARAM_PREFIX
 from .shared_lib import AwsAccountInfo
 from .shared_lib import AwsLogicalWorkload
@@ -31,42 +26,22 @@ logger = logging.getLogger(__name__)
 DEFAULT_ORG_ACCESS_ROLE_NAME = "OrganizationAccountAccessRole"
 
 
-class SleepProvider(dynamic.ResourceProvider):
-    serialize_as_secret_always = False
-
-    @override
-    def create(self, props: dict[str, Any]) -> CreateResult:
-        duration = props["seconds"]
-        time.sleep(duration)
-        return CreateResult(id_="sleep-done", outs={})
-
-
-class Sleep(dynamic.Resource):
-    def __init__(self, name: str, seconds: float, opts: ResourceOptions | None = None):
-        super().__init__(SleepProvider(), name, props={"seconds": seconds}, opts=opts)
-
-
-class AwsAccount(ComponentResource):
-    def __init__(self, *, account_name: str, ou: organizations.OrganizationalUnit, parent: Resource | None = None):
-        super().__init__("labauto:aws-organization:AwsAccount", account_name, None, opts=ResourceOptions(parent=parent))
-        self.account = organizations.Account(
-            account_name,
-            opts=ResourceOptions(parent=self),
-            account_name=account_name,
-            email=f"ejfine+{account_name}@gmail.com",
-            parent_ids=[ou.id],
-            # Deliberately not setting the role_name here, as it causes problems during any subsequent updates, even when not actually changing the role name. Could possible set up ignore_changes...but just leaving it out for now
-            tags=common_tags_native(),
-        )
-        self.wait_after_account_create = Sleep(
-            f"wait-after-account-create-{account_name}",
-            60,
-            opts=ResourceOptions(parent=self, depends_on=[self.account]),
-        )
-        self.account_info_kwargs = self.account.id.apply(lambda account_id: {"id": account_id, "name": account_name})
-
-        export(f"{account_name}-account-id", self.account.id)
-        export(f"{account_name}-role-name", self.account.role_name)
+def create_pulumi_kms_role_policy_args(kms_key_arn: str) -> iam.RolePolicyArgs:
+    return iam.RolePolicyArgs(
+        policy_document=get_policy_document(
+            statements=[
+                GetPolicyDocumentStatementArgs(
+                    actions=[
+                        "kms:Decrypt",
+                        "kms:Encrypt",  # unclear why Encrypt is required to run a Preview...but Pulumi gives an error if it's not included
+                    ],
+                    effect="Allow",
+                    resources=[kms_key_arn],
+                )
+            ]
+        ).json,
+        policy_name="InfraKmsDecrypt",
+    )
 
 
 class AwsWorkload(ComponentResource):
@@ -195,23 +170,15 @@ class AwsWorkload(ComponentResource):
             role_name=f"InfraPreview--{CENTRAL_INFRA_REPO_NAME}",
             assume_role_policy_document=self.preview_in_workload_account_assume_role_policy.json,
             managed_policy_arns=["arn:aws:iam::aws:policy/ReadOnlyAccess"],
-            policies=[
-                iam.RolePolicyArgs(
-                    policy_document=get_policy_document(
-                        statements=[
-                            GetPolicyDocumentStatementArgs(
-                                actions=[
-                                    "kms:Encrypt",  # unclear why Encrypt is required to run a Preview...but Pulumi gives an error if it's not included
-                                    "kms:Decrypt",
-                                ],
-                                resources=[self.kms_key_arn],
-                                effect="Allow",
-                            )
-                        ]
-                    ).json,
-                    policy_name="InfraKmsDecrypt",
-                )
-            ],
+            policies=[create_pulumi_kms_role_policy_args(self.kms_key_arn)],
             tags=common_tags_native(),
             opts=ResourceOptions(provider=account_provider, parent=account_resource),
         )
+
+
+class CommonWorkloadKwargs(TypedDict):
+    central_infra_account: AwsAccount
+    deploy_in_workload_account_assume_role_policy: Output[GetPolicyDocumentResult]
+    preview_in_workload_account_assume_role_policy: Output[GetPolicyDocumentResult]
+    kms_key_arn: str
+    central_infra_provider: Provider
