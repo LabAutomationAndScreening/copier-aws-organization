@@ -1,12 +1,18 @@
-AWSTemplateFormatVersion: "2010-09-09"
+{% raw %}AWSTemplateFormatVersion: "2010-09-09"
 Description: "CloudFormation template to create IAM Roles, an S3 bucket, and an OIDC provider for GitHub."
 Parameters:
   RepoName:
     Type: String
     Description: "The GitHub repository name in the format 'owner/repo'."
+    Default: {% endraw %}{{ repo_org_name }}/{{ repo_name }}{% raw %}
   OrganizationId:
     Type: String
     Description: "The AWS Organization ID."
+  GitRepositoryUrl:
+    Type: String
+    Default: "https://github.com/{% endraw %}{{ repo_org_name }}/{{ repo_name }}{% raw %}"
+    Description: "The URL of the GitHub repository."
+
 Resources:
   OrgRootInfraDeployRole:
     Type: "AWS::IAM::Role"
@@ -27,6 +33,14 @@ Resources:
                 token.actions.githubusercontent.com:aud: "sts.amazonaws.com"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/AdministratorAccess"
+      Tags:
+        - Key: "iac-git-repository-url"
+          Value:
+            Ref: GitRepositoryUrl
+        - Key: "managed-via-iac-by"
+          Value: "cloudformation"
+        - Key: "cloudformation-yaml-file"
+          Value: "pulumi-bootstrap.yaml"
 
   OrgRootInfraPreviewRole:
     Type: "AWS::IAM::Role"
@@ -61,6 +75,38 @@ Resources:
                   Fn::GetAtt:
                     - InfraStateKMSKey
                     - Arn
+        - PolicyName: "S3BucketAccessPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: "CreateMetadataAndLocks"
+                Effect: Allow
+                Action:
+                  - "s3:PutObject"
+                Resource:
+                  Fn::Sub:
+                    - "arn:aws:s3:::${BucketName}/*"
+                    - BucketName:
+                        Ref: InfraStateBucket
+              - Sid: "RemoveLock"
+                Effect: Allow
+                Action:
+                  - "s3:DeleteObject"
+                  - "s3:DeleteObjectVersion"
+                Resource:
+                  Fn::Sub:
+                    - "arn:aws:s3:::${BucketName}/*/.pulumi/locks/*.json"
+                    - BucketName:
+                        Ref: InfraStateBucket
+      Tags:
+        - Key: "iac-git-repository-url"
+          Value:
+            Ref: GitRepositoryUrl
+        - Key: "managed-via-iac-by"
+          Value: "cloudformation"
+        - Key: "cloudformation-yaml-file"
+          Value: "pulumi-bootstrap.yaml"
+
   InfraStateBucket:
     Type: "AWS::S3::Bucket"
     Properties:
@@ -70,6 +116,15 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: "AES256"
+      Tags:
+        - Key: "iac-git-repository-url"
+          Value:
+            Ref: GitRepositoryUrl
+        - Key: "managed-via-iac-by"
+          Value: "cloudformation"
+        - Key: "cloudformation-yaml-file"
+          Value: "pulumi-bootstrap.yaml"
+
   InfraStateBucketNameParameter:
     Type: "AWS::SSM::Parameter"
     Properties:
@@ -77,6 +132,12 @@ Resources:
       Type: "String"
       Value:
         Ref: InfraStateBucket
+      Tags:
+        iac-git-repository-url:
+          Ref: GitRepositoryUrl
+        managed-via-iac-by: "cloudformation"
+        cloudformation-yaml-file: "pulumi-bootstrap.yaml"
+
   InfraStateKMSKey:
     Type: "AWS::KMS::Key"
     Properties:
@@ -109,12 +170,22 @@ Resources:
                   Ref: OrganizationId
       Enabled: true
       KeyUsage: "ENCRYPT_DECRYPT"
+      Tags:
+        - Key: "iac-git-repository-url"
+          Value:
+            Ref: GitRepositoryUrl
+        - Key: "managed-via-iac-by"
+          Value: "cloudformation"
+        - Key: "cloudformation-yaml-file"
+          Value: "pulumi-bootstrap.yaml"
+
   InfraStateKMSKeyAlias:
     Type: "AWS::KMS::Alias"
     Properties:
       AliasName: "alias/org-wide-infra-state"
       TargetKeyId:
         Ref: InfraStateKMSKey
+
   InfraStateKMSKeyArnParameter:
     Type: "AWS::SSM::Parameter"
     Properties:
@@ -124,6 +195,12 @@ Resources:
         Fn::GetAtt:
           - InfraStateKMSKey
           - Arn
+      Tags:
+        iac-git-repository-url:
+          Ref: GitRepositoryUrl
+        managed-via-iac-by: "cloudformation"
+        cloudformation-yaml-file: "pulumi-bootstrap.yaml"
+
   GitHubOIDCProvider:
     Type: "AWS::IAM::OIDCProvider"
     Properties:
@@ -131,13 +208,4 @@ Resources:
       ClientIdList:
         - "sts.amazonaws.com"
       ThumbprintList:
-        - "6938fd4d98bab03faadb97b34396831e3780aea1"
-Outputs:
-  OrgRootInfraDeployRole:
-    Description: "IAM Role with AdministratorAccess permissions."
-    Value:
-      Ref: OrgRootInfraDeployRole
-  InfraStateBucket:
-    Description: "S3 bucket created for infrastructure state."
-    Value:
-      Ref: InfraStateBucket
+        - "6938fd4d98bab03faadb97b34396831e3780aea1"{% endraw %}

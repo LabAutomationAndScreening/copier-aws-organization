@@ -201,7 +201,37 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
         role_name=f"InfraPreview--{CENTRAL_INFRA_REPO_NAME}",
         assume_role_policy_document=preview_assume_role_policy_doc.json,
         managed_policy_arns=["arn:aws:iam::aws:policy/ReadOnlyAccess"],
-        policies=[create_pulumi_kms_role_policy_args(kms_key_arn)],
+        policies=[
+            create_pulumi_kms_role_policy_args(kms_key_arn),
+            iam.RolePolicyArgs(
+                policy_document=central_state_bucket.bucket_name.apply(
+                    lambda bucket_name: get_policy_document(
+                        statements=[
+                            GetPolicyDocumentStatementArgs(
+                                sid="CreateMetadataAndLocks",
+                                effect="Allow",
+                                actions=[
+                                    "s3:PutObject",
+                                ],
+                                resources=[f"arn:aws:s3:::{bucket_name}/${{aws:PrincipalAccount}}/*"],
+                            ),
+                            GetPolicyDocumentStatementArgs(
+                                sid="RemoveLock",
+                                effect="Allow",
+                                actions=[
+                                    "s3:DeleteObject",
+                                    "s3:DeleteObjectVersion",
+                                ],
+                                resources=[
+                                    f"arn:aws:s3:::{bucket_name}/${{aws:PrincipalAccount}}/*/.pulumi/locks/*.json"
+                                ],
+                            ),
+                        ]
+                    ).json
+                ),
+                policy_name="StateBucketWrite",
+            ),
+        ],
         tags=common_tags_native(),
         opts=ResourceOptions(provider=central_infra_provider, parent=central_infra_account),
     )
