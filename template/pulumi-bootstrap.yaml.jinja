@@ -133,13 +133,10 @@ Resources:
       Value:
         Ref: InfraStateBucket
       Tags:
-        - Key: "iac-git-repository-url"
-          Value:
-            Ref: GitRepositoryUrl
-        - Key: "managed-via-iac-by"
-          Value: "cloudformation"
-        - Key: "cloudformation-yaml-file"
-          Value: "pulumi-bootstrap.yaml"
+        iac-git-repository-url:
+          Ref: GitRepositoryUrl
+        managed-via-iac-by: "cloudformation"
+        cloudformation-yaml-file: "pulumi-bootstrap.yaml"
 
   InfraStateKMSKey:
     Type: "AWS::KMS::Key"
@@ -199,13 +196,10 @@ Resources:
           - InfraStateKMSKey
           - Arn
       Tags:
-        - Key: "iac-git-repository-url"
-          Value:
-            Ref: GitRepositoryUrl
-        - Key: "managed-via-iac-by"
-          Value: "cloudformation"
-        - Key: "cloudformation-yaml-file"
-          Value: "pulumi-bootstrap.yaml"
+        iac-git-repository-url:
+          Ref: GitRepositoryUrl
+        managed-via-iac-by: "cloudformation"
+        cloudformation-yaml-file: "pulumi-bootstrap.yaml"
 
   GitHubOIDCProvider:
     Type: "AWS::IAM::OIDCProvider"
