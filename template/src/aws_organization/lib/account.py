@@ -12,6 +12,8 @@ from pulumi import export
 from pulumi.dynamic import CreateResult
 from pulumi_aws_native import organizations
 
+from ..constants import ACCOUNT_EMAIL_PREFIX
+
 logger = logging.getLogger(__name__)
 
 
@@ -37,7 +39,7 @@ class AwsAccount(ComponentResource):
             account_name,
             opts=ResourceOptions(parent=self),
             account_name=account_name,
-            email=f"ejfine+{account_name}@gmail.com",
+            email=f"{ACCOUNT_EMAIL_PREFIX}+{account_name}@gmail.com",
             parent_ids=[ou.id],
             # Deliberately not setting the role_name here, as it causes problems during any subsequent updates, even when not actually changing the role name. Could possible set up ignore_changes...but just leaving it out for now
             tags=common_tags_native(),
