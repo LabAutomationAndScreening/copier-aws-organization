@@ -105,9 +105,7 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
         opts=ResourceOptions(provider=central_infra_provider, parent=central_infra_account),
     )
     kms_key_arn = get_config("proj:kms_key_id")
-    assert isinstance(
-        kms_key_arn, str
-    ), f"Expected proj:kms_key_id to be a string, got {kms_key_arn} of type {type(kms_key_arn)}"
+    assert isinstance(kms_key_arn, str), f"Expected string, got {kms_key_arn} of type {type(kms_key_arn)}"
     _ = ssm.Parameter(
         "central-infra-shared-kms-key-arn",
         type=ssm.ParameterType.STRING,
