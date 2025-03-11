@@ -1,6 +1,7 @@
 from ephemeral_pulumi_deploy import get_config
 from ephemeral_pulumi_deploy.utils import common_tags
 from ephemeral_pulumi_deploy.utils import common_tags_native
+from ephemeral_pulumi_deploy.utils import get_aws_account_id
 from pulumi import Output
 from pulumi import ResourceOptions
 from pulumi_aws.iam import GetPolicyDocumentStatementArgs
@@ -77,6 +78,15 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
         value=all_prod_accounts_resolved.apply(build_central_infra_workload),
         opts=ResourceOptions(provider=central_infra_provider, parent=central_infra_account),
     )
+    _ = ssm.Parameter(
+        f"{central_infra_workload_name}-management-account-id",
+        type=ssm.ParameterType.STRING,
+        description="The AWS Account ID of the management account",
+        name="org-managed/management-account-id",
+        tags=common_tags(),
+        value=get_aws_account_id(),
+        opts=ResourceOptions(provider=central_infra_provider, parent=central_infra_account),
+    )
 
     central_state_bucket = s3.Bucket(
         "central-infra-state",
@@ -95,9 +105,7 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
         opts=ResourceOptions(provider=central_infra_provider, parent=central_infra_account),
     )
     kms_key_arn = get_config("proj:kms_key_id")
-    assert isinstance(kms_key_arn, str), (
-        f"Expected proj:kms_key_id to be a string, got {kms_key_arn} of type {type(kms_key_arn)}"
-    )
+    assert isinstance(kms_key_arn, str), f"Expected string, got {kms_key_arn} of type {type(kms_key_arn)}"
     _ = ssm.Parameter(
         "central-infra-shared-kms-key-arn",
         type=ssm.ParameterType.STRING,
