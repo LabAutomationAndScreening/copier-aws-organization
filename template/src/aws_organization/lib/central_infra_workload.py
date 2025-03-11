@@ -82,7 +82,7 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
         f"{central_infra_workload_name}-management-account-id",
         type=ssm.ParameterType.STRING,
         description="The AWS Account ID of the management account",
-        name="org-managed/management-account-id",
+        name="/org-managed/management-account-id",
         tags=common_tags(),
         value=get_aws_account_id(),
         opts=ResourceOptions(provider=central_infra_provider, parent=central_infra_account),
