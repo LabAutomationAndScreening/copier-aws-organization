@@ -47,9 +47,7 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
         assume_role=assume_role,
         allowed_account_ids=[central_infra_account.account.id],
         region="us-east-1",
-        opts=ResourceOptions(
-            parent=central_infra_account,
-        ),
+        opts=ResourceOptions(parent=central_infra_account, depends_on=central_infra_account.wait_after_account_create),
     )
     prod_account_data = [account.account_info_kwargs for account in [central_infra_account]]
     all_prod_accounts_resolved = Output.all(
