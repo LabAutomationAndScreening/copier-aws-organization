@@ -19,6 +19,7 @@ from ..constants import CENTRAL_INFRA_GITHUB_ORG_NAME
 from ..constants import CENTRAL_INFRA_REPO_NAME
 from .account import AwsAccount
 from .org_units import OrganizationalUnits
+from .shared_lib import ORG_MANAGED_SSM_PARAM_PREFIX
 from .shared_lib import WORKLOAD_INFO_SSM_PARAM_PREFIX
 from .shared_lib import AwsAccountInfo
 from .shared_lib import AwsLogicalWorkload
@@ -82,7 +83,7 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
         f"{central_infra_workload_name}-management-account-id",
         type=ssm.ParameterType.STRING,
         description="The AWS Account ID of the management account",
-        name="org-managed/management-account-id",
+        name=f"{ORG_MANAGED_SSM_PARAM_PREFIX}/management-account-id",
         tags=common_tags(),
         value=get_aws_account_id(),
         opts=ResourceOptions(provider=central_infra_provider, parent=central_infra_account),
@@ -99,7 +100,7 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
     _ = ssm.Parameter(
         "central-infra-state-bucket-name",
         type=ssm.ParameterType.STRING,
-        name="/org-managed/infra-state-bucket-name",
+        name=f"{ORG_MANAGED_SSM_PARAM_PREFIX}/infra-state-bucket-name",
         tags=common_tags(),
         value=central_state_bucket.bucket_name.apply(lambda x: f"{x}"),
         opts=ResourceOptions(provider=central_infra_provider, parent=central_infra_account),
@@ -109,7 +110,7 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
     _ = ssm.Parameter(
         "central-infra-shared-kms-key-arn",
         type=ssm.ParameterType.STRING,
-        name="/org-managed/infra-state-kms-key-arn",
+        name=f"{ORG_MANAGED_SSM_PARAM_PREFIX}/infra-state-kms-key-arn",
         tags=common_tags(),
         value=kms_key_arn,
         opts=ResourceOptions(provider=central_infra_provider, parent=central_infra_account),
