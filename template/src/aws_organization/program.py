@@ -6,6 +6,7 @@ from pulumi import ResourceOptions
 from pulumi import export
 from pulumi_aws.organizations import DelegatedAdministrator
 from pulumi_aws.organizations import DelegatedAdministratorArgs
+from pulumi_command.local import Command
 
 from .constants import CONFIGURE_CLOUD_COURIER
 from .lib import AwsWorkload
@@ -44,6 +45,31 @@ def pulumi_program() -> None:
             depends_on=[
                 identity_center_delegate_workload.prod_accounts[0].wait_after_account_create,
                 enable_service_access,
+            ],
+        ),
+    )
+    billing_delegate_workload = AwsWorkload(
+        workload_name="billing-delegate",
+        prod_ou=org_units.central_infra_prod,
+        prod_account_name_suffixes=["prod"],
+        **common_workload_kwargs,
+    )
+    enable_billing_service_access = Command(  # I think this needs to be after at least 1 other account is created, but maybe not
+        "enable-aws-service-access-for-billing",
+        create="aws organizations enable-aws-service-access --service-principal cost-optimization-hub.bcm.amazonaws.com",
+        opts=ResourceOptions(depends_on=billing_delegate_workload.prod_accounts[0].wait_after_account_create),
+    )
+    _ = DelegatedAdministrator(
+        "delegate-billing-admin",
+        DelegatedAdministratorArgs(
+            account_id=billing_delegate_workload.prod_accounts[0].account.id,
+            service_principal="cost-optimization-hub.bcm.amazonaws.com",
+        ),
+        opts=ResourceOptions(
+            parent=billing_delegate_workload.prod_accounts[0],
+            depends_on=[
+                billing_delegate_workload.prod_accounts[0].wait_after_account_create,
+                enable_billing_service_access,
             ],
         ),
     )
