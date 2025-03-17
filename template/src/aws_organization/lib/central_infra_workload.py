@@ -77,7 +77,7 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
         name=f"{WORKLOAD_INFO_SSM_PARAM_PREFIX}/{central_infra_workload_name}",
         tags=common_tags(),
         value=all_prod_accounts_resolved.apply(build_central_infra_workload),
-        opts=ResourceOptions(provider=central_infra_provider, parent=central_infra_account),
+        opts=ResourceOptions(provider=central_infra_provider, parent=central_infra_account, delete_before_replace=True),
     )
     _ = ssm.Parameter(
         f"{central_infra_workload_name}-management-account-id",
@@ -86,7 +86,7 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
         name=f"{ORG_MANAGED_SSM_PARAM_PREFIX}/management-account-id",
         tags=common_tags(),
         value=get_aws_account_id(),
-        opts=ResourceOptions(provider=central_infra_provider, parent=central_infra_account),
+        opts=ResourceOptions(provider=central_infra_provider, parent=central_infra_account, delete_before_replace=True),
     )
 
     central_state_bucket = s3.Bucket(
@@ -103,7 +103,7 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
         name=f"{ORG_MANAGED_SSM_PARAM_PREFIX}/infra-state-bucket-name",
         tags=common_tags(),
         value=central_state_bucket.bucket_name.apply(lambda x: f"{x}"),
-        opts=ResourceOptions(provider=central_infra_provider, parent=central_infra_account),
+        opts=ResourceOptions(provider=central_infra_provider, parent=central_infra_account, delete_before_replace=True),
     )
     kms_key_arn = get_config("proj:kms_key_id")
     assert isinstance(kms_key_arn, str), f"Expected string, got {kms_key_arn} of type {type(kms_key_arn)}"
@@ -113,7 +113,7 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
         name=f"{ORG_MANAGED_SSM_PARAM_PREFIX}/infra-state-kms-key-arn",
         tags=common_tags(),
         value=kms_key_arn,
-        opts=ResourceOptions(provider=central_infra_provider, parent=central_infra_account),
+        opts=ResourceOptions(provider=central_infra_provider, parent=central_infra_account, delete_before_replace=True),
     )
 
     # TODO: create github OIDC for the central infra repo
