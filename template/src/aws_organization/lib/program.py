@@ -73,7 +73,8 @@ def pulumi_program() -> None:
             ],
         ),
     )
-    create_workloads(org_units=org_units, common_workload_kwargs=common_workload_kwargs)
+    workloads: list[AwsWorkload] = []
+    create_workloads(org_units=org_units, common_workload_kwargs=common_workload_kwargs, workloads=workloads)
     if CONFIGURE_CLOUD_COURIER:
         _ = AwsWorkload(
             workload_name="cloud-courier",
