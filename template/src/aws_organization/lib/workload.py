@@ -87,9 +87,6 @@ class AwsWorkload(ComponentResource):
                     account_name=account_name,
                     ou=ou,
                     parent=self,
-                    account_depends_on=[
-                        account.wait_after_account_create for account in self.all_accounts
-                    ],  # possible odd issues with creating many accounts simultaneously...so just create them sequentially
                 )
                 account_list.append(account_resource)
                 self._create_central_infra_roles(account_resource, account_name)
