@@ -83,7 +83,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.2.2
-        ref: ${{ inputs.CHECKOUT_REF }}
+        with:
+          ref: ${{ inputs.CHECKOUT_REF }}
 
       - name: Install latest versions of python packages
         uses: ./.github/actions/install_deps_uv
