@@ -47,7 +47,7 @@ class AwsAccount(ComponentResource):
         )
         self.wait_after_account_create = Sleep(
             f"wait-after-account-create-{account_name}",
-            60,
+            180,  # only waiting 1 minute seemed to sometimes cause problems
             opts=ResourceOptions(parent=self, depends_on=[self.account]),
         )
         self.account_info_kwargs = self.account.id.apply(lambda account_id: {"id": account_id, "name": account_name})
