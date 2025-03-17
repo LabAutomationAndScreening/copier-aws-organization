@@ -12,7 +12,7 @@ def create_workloads(
     ```
     workloads.append(
         AwsWorkload(
-            workload_name="green-button-go",
+            workload_name="skynet",
             prod_ou=org_units.non_qualified_workload_prod,
             prod_account_name_suffixes=["production"],
             staging_account_name_suffixes=["staging"],
