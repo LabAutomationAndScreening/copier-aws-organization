@@ -83,7 +83,14 @@ class AwsWorkload(ComponentResource):
             assert ou is not None
             for account_name_suffix in suffixes:
                 account_name = f"{workload_name}-{account_name_suffix}"
-                account_resource = AwsAccount(account_name=account_name, ou=ou, parent=self)
+                account_resource = AwsAccount(
+                    account_name=account_name,
+                    ou=ou,
+                    parent=self,
+                    account_depends_on=[
+                        account.wait_after_account_create for account in self.all_accounts
+                    ],  # possible odd issues with creating many accounts simultaneously...so just create them sequentially
+                )
                 account_list.append(account_resource)
                 self._create_central_infra_roles(account_resource, account_name)
         dev_account_data: list[Output[dict[str, str]]] = []
