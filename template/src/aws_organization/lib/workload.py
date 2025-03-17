@@ -143,7 +143,11 @@ class AwsWorkload(ComponentResource):
             value=Output.all(
                 all_prod_accounts_resolved, all_staging_accounts_resolved, all_dev_accounts_resolved
             ).apply(lambda args: build_workload(*args)),
-            opts=ResourceOptions(provider=central_infra_provider, parent=central_infra_account),
+            opts=ResourceOptions(
+                provider=central_infra_provider,
+                parent=central_infra_account,
+                depends_on=[account.wait_after_account_create for account in self.all_accounts],
+            ),
         )
 
     def _create_central_infra_roles(self, account_resource: AwsAccount, account_name: str):
@@ -174,6 +178,10 @@ class AwsWorkload(ComponentResource):
             tags=common_tags_native(),
             opts=ResourceOptions(provider=account_provider, parent=account_resource),
         )
+
+    @property
+    def all_accounts(self) -> tuple[AwsAccount, ...]:
+        return tuple(self.prod_accounts + self.staging_accounts + self.dev_accounts)
 
 
 class CommonWorkloadKwargs(TypedDict):
