@@ -150,6 +150,7 @@ class AwsWorkload(ComponentResource):
             opts=ResourceOptions(
                 provider=central_infra_provider,
                 parent=central_infra_account,
+                delete_before_replace=True,
                 depends_on=[account.wait_after_account_create for account in self.all_accounts],
             ),
         )
