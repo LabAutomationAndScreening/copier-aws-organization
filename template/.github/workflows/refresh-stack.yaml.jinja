@@ -55,7 +55,7 @@ jobs:
       PULUMI_PREVIEW: true
       PREVIEW_ROLE_NAME: OrgRootInfraPreview
       PULUMI_REFRESH: true
-      PULUMI_REFRESH_ROLE: OrgRootInfraDeploy
+      REFRESH_ROLE_NAME: OrgRootInfraDeploy
       AWS_ACCOUNT_ID: "{% endraw %}{{ aws_production_account_id }}{% raw %}"
 
   pulumi-preview-after-refresh:
