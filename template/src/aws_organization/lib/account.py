@@ -12,8 +12,8 @@ from pulumi import export
 from pulumi.dynamic import CreateResult
 from pulumi_aws_native import organizations
 
-from ..constants import ACCOUNT_EMAIL_DOMAIN
-from ..constants import ACCOUNT_EMAIL_PREFIX
+from .constants import ACCOUNT_EMAIL_DOMAIN
+from .constants import ACCOUNT_EMAIL_PREFIX
 
 logger = logging.getLogger(__name__)
 

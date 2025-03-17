@@ -8,12 +8,15 @@
 
 # Usage
 
+## Creating workloads
+
+To create a new logical workload (a set of AWS accounts), add one in the `src/aws_organization/workloads.py` file.
 
 
 # Development
 
 ## Using Pulumi
-Run a Pulumi Preview: `uv run python -m aws_organization.pulumi_deploy --stack={% endraw %}{{ pulumi_stack_name }}{% raw %}`
+Run a Pulumi Preview: `uv run python -m aws_organization.lib.pulumi_deploy --stack={% endraw %}{{ pulumi_stack_name }}{% raw %}`
 
 ## Updating from the template
 This repository uses a copier template. To pull in the latest updates from the template, use the command:

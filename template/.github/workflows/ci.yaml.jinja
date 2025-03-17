@@ -54,7 +54,7 @@ jobs:
       AWS_REGION: us-east-1
       PULUMI_STACK_NAME: {% endraw %}{{ pulumi_stack_name }}{% raw %}
       PYTHON_VERSION: {% endraw %}{{ python_version }}{% raw %}
-      DEPLOY_SCRIPT_MODULE_NAME: aws_organization
+      DEPLOY_SCRIPT_MODULE_NAME: aws_organization.lib
       PULUMI_PREVIEW: true
       PREVIEW_ROLE_NAME: OrgRootInfraPreview
       PULUMI_UP: ${{ github.ref == 'refs/heads/main' }}
