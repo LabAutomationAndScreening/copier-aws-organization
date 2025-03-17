@@ -15,9 +15,9 @@ from pulumi_aws_native import s3
 from pulumi_aws_native import ssm
 from pulumi_command.local import Command
 
-from ..constants import CENTRAL_INFRA_GITHUB_ORG_NAME
-from ..constants import CENTRAL_INFRA_REPO_NAME
 from .account import AwsAccount
+from .constants import CENTRAL_INFRA_GITHUB_ORG_NAME
+from .constants import CENTRAL_INFRA_REPO_NAME
 from .org_units import OrganizationalUnits
 from .shared_lib import ORG_MANAGED_SSM_PARAM_PREFIX
 from .shared_lib import WORKLOAD_INFO_SSM_PARAM_PREFIX

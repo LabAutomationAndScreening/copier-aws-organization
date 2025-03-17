@@ -15,8 +15,8 @@ from pulumi_aws_native import iam
 from pulumi_aws_native import organizations
 from pulumi_aws_native import ssm
 
-from ..constants import CENTRAL_INFRA_REPO_NAME
 from .account import AwsAccount
+from .constants import CENTRAL_INFRA_REPO_NAME
 from .shared_lib import WORKLOAD_INFO_SSM_PARAM_PREFIX
 from .shared_lib import AwsAccountInfo
 from .shared_lib import AwsLogicalWorkload

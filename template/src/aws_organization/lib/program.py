@@ -8,11 +8,11 @@ from pulumi_aws.organizations import DelegatedAdministrator
 from pulumi_aws.organizations import DelegatedAdministratorArgs
 from pulumi_command.local import Command
 
+from ..workloads import create_workloads
+from .central_infra_workload import create_central_infra_workload
 from .constants import CONFIGURE_CLOUD_COURIER
-from .lib import AwsWorkload
-from .lib import create_central_infra_workload
-from .lib import create_organizational_units
-from .workloads import create_workloads
+from .org_units import create_organizational_units
+from .workload import AwsWorkload
 
 logger = logging.getLogger(__name__)
 
