@@ -25,13 +25,20 @@ class SleepProvider(dynamic.ResourceProvider):
     @override
     def create(self, props: dict[str, Any]) -> CreateResult:
         duration = props["seconds"]
+        logger.info(f"Sleeping for {duration} seconds for the creation of the resource {props['name']}")
         time.sleep(duration)
         return CreateResult(id_="sleep-done", outs={})
+
+    @override
+    def delete(self, _id: str, _props: dict[str, Any]) -> None:
+        duration = _props["seconds"]
+        logger.info(f"Sleeping for {duration} seconds for the deletion of the resource ID {_id} named {_props['name']}")
+        time.sleep(duration)
 
 
 class Sleep(dynamic.Resource):
     def __init__(self, name: str, seconds: float, opts: ResourceOptions | None = None):
-        super().__init__(SleepProvider(), name, props={"seconds": seconds}, opts=opts)
+        super().__init__(SleepProvider(), name, props={"seconds": seconds, "name": name}, opts=opts)
 
 
 class AwsAccount(ComponentResource):
