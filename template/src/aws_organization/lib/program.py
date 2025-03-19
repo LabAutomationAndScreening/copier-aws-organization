@@ -8,10 +8,14 @@ from pulumi_aws.organizations import DelegatedAdministrator
 from pulumi_aws.organizations import DelegatedAdministratorArgs
 from pulumi_command.local import Command
 
+from ..org_management import get_org_admins
 from ..workloads import create_workloads
 from .central_infra_workload import create_central_infra_workload
 from .constants import CONFIGURE_CLOUD_COURIER
 from .org_units import create_organizational_units
+from .permissions import AwsSsoPermissionSet
+from .permissions import AwsSsoPermissionSetAccountAssignments
+from .shared_lib import AwsAccountInfo
 from .workload import AwsWorkload
 
 logger = logging.getLogger(__name__)
@@ -26,6 +30,25 @@ def pulumi_program() -> None:
 
     # Create Resources Here
     org_units = create_organizational_units()
+
+    org_admin_access = AwsSsoPermissionSet(
+        name="ManagementAccountAdminAccess",
+        description="Admin access within the Organization Management Account",
+        managed_policies=["AdministratorAccess"],
+    )
+    org_admin_view_access = AwsSsoPermissionSet(
+        name="ManagementAccountViewAccess",
+        description="View access within the Organization Management Account",
+        managed_policies=["ReadOnlyAccess"],
+    )
+    management_account_info = AwsAccountInfo(name="management-account", id=get_aws_account_id())
+    org_admins = get_org_admins()
+    for perm_set in (org_admin_access, org_admin_view_access):
+        _ = AwsSsoPermissionSetAccountAssignments(
+            permission_set=perm_set,
+            users=org_admins,
+            account_info=management_account_info,
+        )
 
     common_workload_kwargs, enable_service_access = create_central_infra_workload(org_units)
     identity_center_delegate_workload = AwsWorkload(
