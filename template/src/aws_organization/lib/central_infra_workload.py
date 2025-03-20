@@ -44,7 +44,7 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
     # https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-enable-root-access.html
     enable_iam_service_access = (
         Command(  # I think this needs to be after at least 1 other account is created, but maybe not
-            "enable-aws-service-access",
+            "enable-iam-service-access",
             create="aws organizations enable-aws-service-access --service-principal iam.amazonaws.com",
             delete="aws organizations disable-aws-service-access --service-principal iam.amazonaws.com",
             opts=ResourceOptions(depends_on=enable_service_access),
