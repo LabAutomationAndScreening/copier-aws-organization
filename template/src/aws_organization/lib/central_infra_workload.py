@@ -37,16 +37,25 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
         Command(  # I think this needs to be after at least 1 other account is created, but maybe not
             "enable-aws-service-access",
             create="aws organizations enable-aws-service-access --service-principal account.amazonaws.com",
+            delete="aws organizations disable-aws-service-access --service-principal account.amazonaws.com",
             opts=ResourceOptions(depends_on=central_infra_account.wait_after_account_create),
         )
     )
     # https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-enable-root-access.html
+    enable_iam_service_access = (
+        Command(  # I think this needs to be after at least 1 other account is created, but maybe not
+            "enable-aws-service-access",
+            create="aws organizations enable-aws-service-access --service-principal iam.amazonaws.com",
+            delete="aws organizations disable-aws-service-access --service-principal iam.amazonaws.com",
+            opts=ResourceOptions(depends_on=enable_service_access),
+        )
+    )
     enable_root_creds_management = (
         Command(  # I think this needs to be after at least 1 other account is created, but maybe not
             "enable-root-creds-management",
             create="aws iam enable-organizations-root-credentials-management",
             delete="aws iam disable-organizations-root-credentials-management",
-            opts=ResourceOptions(depends_on=enable_service_access),
+            opts=ResourceOptions(depends_on=enable_iam_service_access),
         )
     )
     _ = Command(  # I think this needs to be after at least 1 other account is created, but maybe not
