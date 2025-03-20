@@ -37,23 +37,34 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
         Command(  # I think this needs to be after at least 1 other account is created, but maybe not
             "enable-aws-service-access",
             create="aws organizations enable-aws-service-access --service-principal account.amazonaws.com",
-            opts=ResourceOptions(depends_on=central_infra_account.wait_after_account_create),
+            delete="aws organizations disable-aws-service-access --service-principal account.amazonaws.com",
+            opts=ResourceOptions(
+                depends_on=central_infra_account.wait_after_account_create, delete_before_replace=True
+            ),
         )
     )
     # https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-enable-root-access.html
+    enable_iam_service_access = (
+        Command(  # I think this needs to be after at least 1 other account is created, but maybe not
+            "enable-iam-service-access",
+            create="aws organizations enable-aws-service-access --service-principal iam.amazonaws.com",
+            delete="aws organizations disable-aws-service-access --service-principal iam.amazonaws.com",
+            opts=ResourceOptions(depends_on=enable_service_access, delete_before_replace=True),
+        )
+    )
     enable_root_creds_management = (
         Command(  # I think this needs to be after at least 1 other account is created, but maybe not
             "enable-root-creds-management",
             create="aws iam enable-organizations-root-credentials-management",
             delete="aws iam disable-organizations-root-credentials-management",
-            opts=ResourceOptions(depends_on=enable_service_access),
+            opts=ResourceOptions(depends_on=enable_iam_service_access, delete_before_replace=True),
         )
     )
     _ = Command(  # I think this needs to be after at least 1 other account is created, but maybe not
         "enable-organizations-root-sessions",
         create="aws iam enable-organizations-root-sessions",
         delete="aws iam disable-organizations-root-sessions",
-        opts=ResourceOptions(depends_on=enable_root_creds_management),
+        opts=ResourceOptions(depends_on=enable_root_creds_management, delete_before_replace=True),
     )
     central_infra_role_arn = central_infra_account.account.id.apply(
         lambda x: f"arn:aws:iam::{x}:role/{DEFAULT_ORG_ACCESS_ROLE_NAME}"
