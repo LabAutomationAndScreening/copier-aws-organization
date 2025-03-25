@@ -218,12 +218,7 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
                 GetPolicyDocumentStatementArgs(
                     effect="Allow",
                     actions=["sts:AssumeRole"],
-                    principals=[
-                        GetPolicyDocumentStatementPrincipalArgs(
-                            type="AWS",
-                            identifiers=[arn],
-                        )
-                    ],
+                    principals=[GetPolicyDocumentStatementPrincipalArgs(type="AWS", identifiers=[arn])],
                 )
             ]
         )
@@ -264,12 +259,27 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
                 ),
                 policy_name="StateBucketWrite",
             ),
+            iam.RolePolicyArgs(
+                policy_document=get_policy_document(
+                    statements=[
+                        GetPolicyDocumentStatementArgs(
+                            sid="AssumePreviewRolesInOtherAccounts",
+                            effect="Allow",
+                            actions=["sts:AssumeRole"],
+                            resources=[f"arn:aws:iam::*:role/InfraPreview--{CENTRAL_INFRA_REPO_NAME}"],
+                        ),
+                    ]
+                ).json,
+                policy_name="AssumePreviewRolesInOtherAccounts",
+            ),
         ],
         tags=common_tags_native(),
         opts=ResourceOptions(provider=central_infra_provider, parent=central_infra_account),
     )
-    preview_in_workload_account_assume_role_policy = central_infra_preview_role.arn.apply(
-        lambda arn: get_policy_document(
+    preview_in_workload_account_assume_role_policy = Output.all(
+        central_infra_preview_role.arn, central_infra_account.account.account_id
+    ).apply(
+        lambda args: get_policy_document(
             statements=[
                 GetPolicyDocumentStatementArgs(
                     effect="Allow",
@@ -277,8 +287,11 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
                     principals=[
                         GetPolicyDocumentStatementPrincipalArgs(
                             type="AWS",
-                            identifiers=[arn],
-                        )
+                            identifiers=[
+                                args[0],
+                                f"arn:aws:iam::{args[1]}:root",  # TODO: consider locking this further down...but it's just a preview role, and it makes it so users can run previews when working in the central-infra repo
+                            ],
+                        ),
                     ],
                 )
             ]
