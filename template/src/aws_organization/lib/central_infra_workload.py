@@ -218,12 +218,7 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
                 GetPolicyDocumentStatementArgs(
                     effect="Allow",
                     actions=["sts:AssumeRole"],
-                    principals=[
-                        GetPolicyDocumentStatementPrincipalArgs(
-                            type="AWS",
-                            identifiers=[arn],
-                        )
-                    ],
+                    principals=[GetPolicyDocumentStatementPrincipalArgs(type="AWS", identifiers=[arn])],
                 )
             ]
         )
