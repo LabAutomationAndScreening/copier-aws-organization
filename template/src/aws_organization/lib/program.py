@@ -29,6 +29,13 @@ def pulumi_program() -> None:
     export("env", env)
 
     # Create Resources Here
+    # https://docs.aws.amazon.com/ram/latest/userguide/getting-started-sharing.html#getting-started-sharing-orgs
+    _ = Command(
+        "enable-resource-sharing",
+        create="aws ram enable-sharing-with-aws-organization",
+        # this doesn't appear like it can be disabled
+        opts=ResourceOptions(delete_before_replace=True),
+    )
     org_units = create_organizational_units()
 
     org_admin_access = AwsSsoPermissionSet(
