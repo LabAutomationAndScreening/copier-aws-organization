@@ -269,7 +269,7 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
                                     "secretsmanager:GetSecretValue",
                                 ],
                                 resources=[
-                                    "arn:aws:secretsmanager:*:*:secret:/manually-entered-secrets/github-preview-access-token"  # TODO: lock down account and region
+                                    "arn:aws:secretsmanager:*:*:secret:/manually-entered-secrets/github-preview-access-token-*"  # TODO: lock down account and region
                                 ],  # TODO: move this secret path to shared library
                             ),
                         ]
