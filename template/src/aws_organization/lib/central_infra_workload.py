@@ -254,6 +254,24 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
                                     f"arn:aws:s3:::{bucket_name}/${{aws:PrincipalAccount}}/*/.pulumi/locks/*.json"
                                 ],
                             ),
+                            GetPolicyDocumentStatementArgs(
+                                sid="ListAllSecrets",
+                                effect="Allow",
+                                resources=["*"],
+                                actions=[
+                                    "secretsmanager:ListSecrets",  # when trying to use `secretsmanager:Name` and `secretsmanager:SecretId` to restrict this, it wouldn't let any be listed
+                                ],
+                            ),
+                            GetPolicyDocumentStatementArgs(
+                                sid="ReadGithubPreviewSecret",
+                                effect="Allow",
+                                actions=[
+                                    "secretsmanager:GetSecretValue",
+                                ],
+                                resources=[
+                                    "arn:aws:secretsmanager:*:*:secret:/manually-entered-secrets/github-preview-access-token"  # TODO: lock down account and region
+                                ],  # TODO: move this secret path to shared library
+                            ),
                         ]
                     ).json
                 ),
