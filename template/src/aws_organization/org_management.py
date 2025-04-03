@@ -1,4 +1,4 @@
-from .lib.permissions import UserInfo
+from lab_auto_pulumi import UserInfo
 
 
 def get_org_admins() -> list[UserInfo]:

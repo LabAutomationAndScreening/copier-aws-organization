@@ -2,6 +2,9 @@ import logging
 
 from ephemeral_pulumi_deploy import get_aws_account_id
 from ephemeral_pulumi_deploy import get_config
+from lab_auto_pulumi import AwsAccountInfo
+from lab_auto_pulumi import AwsSsoPermissionSet
+from lab_auto_pulumi import AwsSsoPermissionSetAccountAssignments
 from pulumi import ResourceOptions
 from pulumi import export
 from pulumi_aws.organizations import DelegatedAdministrator
@@ -13,9 +16,6 @@ from ..workloads import create_workloads
 from .central_infra_workload import create_central_infra_workload
 from .constants import CONFIGURE_CLOUD_COURIER
 from .org_units import create_organizational_units
-from .permissions import AwsSsoPermissionSet
-from .permissions import AwsSsoPermissionSetAccountAssignments
-from .shared_lib import AwsAccountInfo
 from .workload import AwsWorkload
 
 logger = logging.getLogger(__name__)
