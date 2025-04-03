@@ -3,6 +3,9 @@ from typing import TypedDict
 
 from ephemeral_pulumi_deploy.utils import common_tags
 from ephemeral_pulumi_deploy.utils import common_tags_native
+from lab_auto_pulumi import WORKLOAD_INFO_SSM_PARAM_PREFIX
+from lab_auto_pulumi import AwsAccountInfo
+from lab_auto_pulumi import AwsLogicalWorkload
 from pulumi import ComponentResource
 from pulumi import Output
 from pulumi import ResourceOptions
@@ -17,9 +20,6 @@ from pulumi_aws_native import ssm
 
 from .account import AwsAccount
 from .constants import CENTRAL_INFRA_REPO_NAME
-from .shared_lib import WORKLOAD_INFO_SSM_PARAM_PREFIX
-from .shared_lib import AwsAccountInfo
-from .shared_lib import AwsLogicalWorkload
 
 logger = logging.getLogger(__name__)
 
