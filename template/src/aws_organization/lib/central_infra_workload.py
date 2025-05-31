@@ -265,7 +265,7 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
                                     "secretsmanager:ListSecrets",  # when trying to use `secretsmanager:Name` and `secretsmanager:SecretId` to restrict this, it wouldn't let any be listed
                                 ],
                             ),
-                            GetPolicyDocumentStatementArgs(
+                            GetPolicyDocumentStatementArgs(  # TODO: deprecate and remove this in favor of the more general preview secrets path below
                                 sid="ReadGithubPreviewSecret",
                                 effect="Allow",
                                 actions=[
