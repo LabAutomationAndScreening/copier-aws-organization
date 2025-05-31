@@ -4,6 +4,7 @@ from ephemeral_pulumi_deploy.utils import common_tags
 from ephemeral_pulumi_deploy.utils import common_tags_native
 from ephemeral_pulumi_deploy.utils import get_aws_account_id
 from lab_auto_pulumi import GITHUB_PREVIEW_TOKEN_SECRET_NAME
+from lab_auto_pulumi import MANUAL_IAC_SECRETS_PREFIX
 from lab_auto_pulumi import ORG_MANAGED_SSM_PARAM_PREFIX
 from lab_auto_pulumi import WORKLOAD_INFO_SSM_PARAM_PREFIX
 from lab_auto_pulumi import AwsAccountInfo
@@ -272,6 +273,16 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
                                 ],
                                 resources=[
                                     f"arn:aws:secretsmanager:{pulumi_aws.config.region}:*:secret:{GITHUB_PREVIEW_TOKEN_SECRET_NAME}-*"  # TODO: lock down account
+                                ],
+                            ),
+                            GetPolicyDocumentStatementArgs(
+                                sid="ReadSecretsForPreviewTokensForIaC",
+                                effect="Allow",
+                                actions=[
+                                    "secretsmanager:GetSecretValue",
+                                ],
+                                resources=[
+                                    f"arn:aws:secretsmanager:{pulumi_aws.config.region}:*:secret:{MANUAL_IAC_SECRETS_PREFIX}/preview-tokens/*"  # TODO: lock down account
                                 ],
                             ),
                         ]
