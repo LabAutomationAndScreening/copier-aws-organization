@@ -11,24 +11,30 @@ env:
   PRE_COMMIT_HOME: ${{ github.workspace }}/.precommit_cache
 
 permissions:
-    id-token: write
-    contents: write # needed for mutex, and updating dependabot branches
-    statuses: write # needed for updating status on Dependabot PRs
+    id-token: write # needed to assume OIDC roles (e.g. for downloading from CodeArtifact)
 
 jobs:
   get-values:
     uses: ./.github/workflows/get-values.yaml
+    permissions:
+      contents: write # needed for updating dependabot branches
 
   lint:
     needs: [ get-values ]
     name: Pre-commit
     uses: ./.github/workflows/pre-commit.yaml
+    permissions:
+      contents: write # needed for mutex
+      id-token: write # needed to assume OIDC roles (e.g. for downloading from CodeArtifact)
     with:
       python-version: {% endraw %}{{ python_version }}{% raw %}
 
   pulumi-workflow:
     uses: ./.github/workflows/pulumi-aws.yml
     needs: [ lint ]
+    permissions:
+      id-token: write # needed to assume OIDC roles (e.g. for downloading from CodeArtifact)
+      contents: write # needed for mutex
     with:
       AWS_REGION: {% endraw %}{{ aws_region_for_stack }}{% raw %}
       PULUMI_STACK_NAME: {% endraw %}{{ pulumi_stack_name }}{% raw %}
@@ -45,6 +51,8 @@ jobs:
     needs:
       - get-values
       - pulumi-workflow
+    permissions:
+      statuses: write # needed for updating status on Dependabot PRs
     if: always()
     steps:
       - name: fail if prior job failure
