@@ -87,8 +87,8 @@ env:
   PRE_COMMIT_HOME: ${{ github.workspace }}/.precommit_cache
 
 permissions:
-    id-token: write
-    contents: write # needed for mutex
+  id-token: write # needed to assume OIDC roles (e.g. for downloading from CodeArtifact)
+  contents: write # needed for mutex
 
 jobs:
   pulumi:
@@ -97,7 +97,7 @@ jobs:
       IAC_GITHUB_API_TOKENS: ${{ secrets.iac-github-api-tokens }} # only used in non-enterprise situations when not using full fledged Secrets Manager
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
         with:
           ref: ${{ inputs.CHECKOUT_REF }}
 
