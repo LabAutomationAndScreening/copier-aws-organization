@@ -46,15 +46,6 @@ python_package_registry:
         - AWS CodeArtifact
     default: PyPI
 
-python_ci_versions:
-    type: str
-    help: What versions should Python run CI on the instantiated template?
-    multiselect: true
-    choices:
-      - "3.12.7"
-      - "3.13.2"
-      - "3.14.0"
-
 
 aws_identity_center_id:
     type: str
