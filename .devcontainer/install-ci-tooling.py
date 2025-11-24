@@ -7,11 +7,11 @@ import sys
 import tempfile
 from pathlib import Path
 
-UV_VERSION = "0.8.15"
-PNPM_VERSION = "10.15.1"
-COPIER_VERSION = "9.10.1"
+UV_VERSION = "0.9.11"
+PNPM_VERSION = "10.23.0"
+COPIER_VERSION = "9.11.0"
 COPIER_TEMPLATE_EXTENSIONS_VERSION = "0.3.3"
-PRE_COMMIT_VERSION = "4.3.0"
+PRE_COMMIT_VERSION = "4.5.0"
 GITHUB_WINDOWS_RUNNER_BIN_PATH = r"C:\Users\runneradmin\.local\bin"
 INSTALL_SSM_PLUGIN_BY_DEFAULT = False
 parser = argparse.ArgumentParser(description="Install CI tooling for the repo")
@@ -42,7 +42,7 @@ def main():
     args = parser.parse_args(sys.argv[1:])
     is_windows = platform.system() == "Windows"
     uv_env = dict(os.environ)
-    uv_env.update({"UV_PYTHON_PREFERENCE": "only-system", "UV_PYTHON": args.python_version})
+    uv_env.update({"UV_PYTHON": args.python_version, "UV_PYTHON_PREFERENCE": "only-system"})
     uv_path = ((GITHUB_WINDOWS_RUNNER_BIN_PATH + "\\") if is_windows else "") + "uv"
     if is_windows:
         pwsh = shutil.which("pwsh") or shutil.which("powershell")
@@ -65,7 +65,7 @@ def main():
             )
         else:
             _ = subprocess.run(
-                f"curl -fsSL https://astral.sh/uv/{UV_VERSION}/install.sh | sh",
+                f"curl -fsSL --connect-timeout 20 --max-time 40 --retry 3 --retry-delay 5 --retry-connrefused --proto '=https' https://astral.sh/uv/{UV_VERSION}/install.sh | sh",
                 check=True,
                 shell=True,
                 env=uv_env,

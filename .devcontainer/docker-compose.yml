@@ -13,7 +13,7 @@ services:
       - python_venv:/workspaces/copier-aws-organization/.venv
     command: sleep infinity
     ports:
-      - "54184:2222"
+      - "51184:2222"
     environment:
       - AWS_PROFILE=localstack
       - AWS_DEFAULT_REGION=us-east-1

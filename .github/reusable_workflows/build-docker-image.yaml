@@ -43,6 +43,7 @@ permissions:
 jobs:
   build-image:
     name: Build Docker Image
+    timeout-minutes: 15
     runs-on: ubuntu-24.04
     outputs:
       artifact-name: ${{ steps.calculate-build-context-hash.outputs.image_name_no_slashes }}
@@ -66,10 +67,12 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v5.0.0
+        with:
+          persist-credentials: false
 
       - name: OIDC Auth for ECR
         if: ${{ inputs.push-role-name != 'no-push' }}
-        uses: aws-actions/configure-aws-credentials@v5.0.0
+        uses: aws-actions/configure-aws-credentials@v5.1.0
         with:
           role-to-assume: arn:aws:iam::${{ steps.parse_ecr_url.outputs.aws_account_id }}:role/${{ inputs.push-role-name }}
           aws-region: ${{ steps.parse_ecr_url.outputs.aws_region }}
@@ -92,7 +95,7 @@ jobs:
         uses: ben-z/gh-action-mutex@1ebad517141198e08d47cf72f3c0975316620a65 # v1.0.0-alpha.10
         with:
           branch: mutex-${{ inputs.repository }}-${{ inputs.image_name }}
-        timeout-minutes: 30 # this is the amount of time this action will wait to attempt to acquire the mutex lock before failing, e.g. if other jobs are queued up in front of it
+        timeout-minutes: 8 # this is the amount of time this action will wait to attempt to acquire the mutex lock before failing, e.g. if other jobs are queued up in front of it
 
       - name: Test if docker image exists
         if: ${{ inputs.push-role-name != 'no-push' }}
@@ -126,7 +129,7 @@ jobs:
 
       - name: Build Docker Image
         if: ${{ (inputs.save-as-artifact && inputs.push-role-name == 'no-push') || steps.check-if-exists.outputs.status == 'notfound' }}
-        uses: docker/build-push-action@v6.16.0
+        uses: docker/build-push-action@v6.18.0
         with:
           context: ${{ inputs.context }}
           push: ${{ inputs.push-role-name != 'no-push' && steps.check-if-exists.outputs.status == 'notfound' }}
@@ -153,7 +156,7 @@ jobs:
 
       - name: Upload Docker Image Artifact
         if: ${{ inputs.save-as-artifact }}
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v5.0.0
         with:
           name: ${{ steps.calculate-build-context-hash.outputs.image_name_no_slashes }}
           path: ${{ steps.calculate-build-context-hash.outputs.image_name_no_slashes }}.tar
