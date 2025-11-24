@@ -28,6 +28,7 @@ permissions:
 jobs:
   pre-commit:
     runs-on: ubuntu-24.04
+    timeout-minutes: 8
     name: Pre-commit
     steps:
       - name: Checkout code during push

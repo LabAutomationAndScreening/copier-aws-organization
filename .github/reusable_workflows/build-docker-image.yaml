@@ -43,6 +43,7 @@ permissions:
 jobs:
   build-image:
     name: Build Docker Image
+    timeout-minutes: 8
     runs-on: ubuntu-24.04
     outputs:
       artifact-name: ${{ steps.calculate-build-context-hash.outputs.image_name_no_slashes }}

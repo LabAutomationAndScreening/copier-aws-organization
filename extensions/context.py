@@ -95,6 +95,9 @@ class ContextUpdater(ContextHook):
         context["gha_sleep"] = "v2.0.3"
         context["gha_linux_runner"] = "ubuntu-24.04"
         context["gha_windows_runner"] = "windows-2025"
+        context["gha_short_timeout_minutes"] = "2"
+        context["gha_medium_timeout_minutes"] = "8"
+        context["gha_long_timeout_minutes"] = "15"
 
         context["py312_version"] = "3.12.7"
         context["py313_version"] = "3.13.2"

@@ -47,6 +47,7 @@ jobs:
           '--data-file tests/copier_data/data2.yaml',
           ]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 8
     env:
       UV_PYTHON: ${{ matrix.python-version }}
     permissions:
@@ -134,6 +135,7 @@ jobs:
 
   required-check:
     runs-on: ubuntu-24.04
+    timeout-minutes: 2
     needs: [ lint-matrix, get-values ]
     permissions:
       statuses: write # needed for updating status on Dependabot PRs
