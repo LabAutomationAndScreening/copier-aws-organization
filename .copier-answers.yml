@@ -1,5 +1,5 @@
 # Changes here will be overwritten by Copier
-_commit: v0.0.83-6-g039ae8f
+_commit: v0.0.83-7-gd23117e
 _src_path: gh:LabAutomationAndScreening/copier-base-template.git
 description: Managing an AWS Organization
 install_claude_cli: false
