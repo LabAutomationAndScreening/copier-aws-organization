@@ -98,6 +98,7 @@ class ContextUpdater(ContextHook):
         context["gha_short_timeout_minutes"] = "2"
         context["gha_medium_timeout_minutes"] = "8"
         context["gha_long_timeout_minutes"] = "15"
+        context["gha_xlong_timeout_minutes"] = "45"
 
         context["py312_version"] = "3.12.7"
         context["py313_version"] = "3.13.2"
