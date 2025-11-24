@@ -12,6 +12,8 @@
     "**/.pipx_cache",
     "**/__pycache__",
     "**/vendor_files",
+    "**/graphql_codegen",
+    "**/generated/open_api",
     "**/.venv",
     "**/venv"
   ],
@@ -99,7 +101,6 @@
   "reportUnnecessaryTypeIgnoreComment": true,
   "reportMatchNotExhaustive": true,
   "reportImplicitOverride": true,
-  "reportShadowedImports": true,
   "pythonPlatform": "Linux",
   "executionEnvironments": [
     {

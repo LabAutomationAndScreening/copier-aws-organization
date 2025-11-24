@@ -11,6 +11,11 @@ description:
     type: str
     help: What is the description of this repository?
 
+install_claude_cli:
+    type: bool
+    help: Should the Claude CLI be installed in the devcontainer?
+    default: no
+
 is_open_source:
     type: bool
     help: Is this library open source?
@@ -40,6 +45,15 @@ python_package_registry:
         - PyPI
         - AWS CodeArtifact
     default: PyPI
+
+python_ci_versions:
+    type: str
+    help: What versions should Python run CI on the instantiated template?
+    multiselect: true
+    choices:
+      - "3.12.7"
+      - "3.13.2"
+      - "3.14.0"
 
 
 aws_identity_center_id:
