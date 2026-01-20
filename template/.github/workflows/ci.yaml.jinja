@@ -4,6 +4,9 @@ on:
   push:
     branches-ignore:
       - 'gh-readonly-queue/**' # don't run (again) when on these special branches created during merge groups; the `on: merge_group` already triggers it.
+  pull_request:
+    branches-ignore:
+      - 'gh-readonly-queue/**' # don't run (again) when on these special branches created during merge groups; the `on: merge_group` already triggers it.
   merge_group:
 
 env:
@@ -60,6 +63,7 @@ jobs:
       PULUMI_UP: ${{ github.ref == 'refs/heads/main' }}
       PULUMI_UP_ROLE_NAME: OrgRootInfraDeploy
       AWS_ACCOUNT_ID: "{% endraw %}{{ aws_production_account_id }}{% raw %}"
+      SHOW_PREVIEW_COMMENT_ON_PR: ${{ github.event_name == 'pull_request' }}
 
   required-check:
     runs-on: {% endraw %}{{ gha_linux_runner }}{% raw %}
