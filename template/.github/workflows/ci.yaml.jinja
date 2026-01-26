@@ -23,7 +23,8 @@ jobs:
       contents: write # needed for updating dependabot branches
 
   lint:
-    needs: [ get-values ]
+    needs:
+      - get-values
     name: Pre-commit
     uses: ./.github/workflows/pre-commit.yaml
     permissions:
@@ -49,7 +50,10 @@ jobs:
 
   pulumi-workflow:
     uses: ./.github/workflows/pulumi-aws.yml
-    needs: [ get-values, check-skip-duplicate ]
+    needs:
+      - get-values
+      - check-skip-duplicate
+    if: needs.check-skip-duplicate.outputs.should-run == 'true'
     permissions:
       id-token: write # needed to assume OIDC roles (e.g. for downloading from CodeArtifact)
       contents: write # needed for mutex
@@ -70,17 +74,19 @@ jobs:
     timeout-minutes: {% endraw %}{{ gha_short_timeout_minutes }}{% raw %}
     needs:
       - get-values
+      - lint
       - check-skip-duplicate
       - pulumi-workflow
     permissions:
       statuses: write # needed for updating status on Dependabot PRs
-    if: always()
+    if: always() && needs.check-skip-duplicate.outputs.should-run == 'true'
     steps:
       - name: fail if prior job failure
         run: |
           failure_pattern="^(failure|cancelled)$"
 
           if [[ "${{ needs.check-skip-duplicate.result }}" =~ $failure_pattern ]] ||
+             [[ "${{ needs.lint.result }}" =~ $failure_pattern ]] ||
              [[ "${{ needs.pulumi-workflow.result }}" =~ $failure_pattern ]] ||
              [[ "${{ needs.get-values.result }}" =~ $failure_pattern ]]; then
             echo "❌ One or more jobs failed or were cancelled"
