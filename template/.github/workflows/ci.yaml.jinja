@@ -4,6 +4,9 @@ on:
   push:
     branches-ignore:
       - 'gh-readonly-queue/**' # don't run (again) when on these special branches created during merge groups; the `on: merge_group` already triggers it.
+  pull_request:
+    branches-ignore:
+      - 'gh-readonly-queue/**' # don't run (again) when on these special branches created during merge groups; the `on: merge_group` already triggers it.
   merge_group:
 
 env:
@@ -29,9 +32,24 @@ jobs:
     with:
       python-version: {% endraw %}{{ python_version }}{% raw %}
 
+  check-skip-duplicate:
+    runs-on: {% endraw %}{{ gha_linux_runner }}{% raw %}
+    permissions:
+      contents: read
+      pull-requests: read # needed to check if PR exists for current branch
+    outputs:
+      should-run: ${{ steps.check.outputs.should-run }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@{% endraw %}{{ gha_checkout }}{% raw %}
+        with:
+          persist-credentials: false
+      - id: check
+        uses: ./.github/actions/check-skip-duplicates
+
   pulumi-workflow:
     uses: ./.github/workflows/pulumi-aws.yml
-    needs: [ lint ]
+    needs: [ get-values, check-skip-duplicate ]
     permissions:
       id-token: write # needed to assume OIDC roles (e.g. for downloading from CodeArtifact)
       contents: write # needed for mutex
@@ -45,21 +63,30 @@ jobs:
       PULUMI_UP: ${{ github.ref == 'refs/heads/main' }}
       PULUMI_UP_ROLE_NAME: OrgRootInfraDeploy
       AWS_ACCOUNT_ID: "{% endraw %}{{ aws_production_account_id }}{% raw %}"
+      SHOW_PREVIEW_COMMENT_ON_PR: ${{ github.event_name == 'pull_request' }}
 
   required-check:
     runs-on: {% endraw %}{{ gha_linux_runner }}{% raw %}
     timeout-minutes: {% endraw %}{{ gha_short_timeout_minutes }}{% raw %}
     needs:
       - get-values
+      - check-skip-duplicate
       - pulumi-workflow
     permissions:
       statuses: write # needed for updating status on Dependabot PRs
     if: always()
     steps:
       - name: fail if prior job failure
-        if: needs.get-values.result != 'success' || needs.pulumi-workflow.result != 'success'
         run: |
-          exit 1
+          failure_pattern="^(failure|cancelled)$"
+
+          if [[ "${{ needs.check-skip-duplicate.result }}" =~ $failure_pattern ]] ||
+             [[ "${{ needs.pulumi-workflow.result }}" =~ $failure_pattern ]] ||
+             [[ "${{ needs.get-values.result }}" =~ $failure_pattern ]]; then
+            echo "❌ One or more jobs failed or were cancelled"
+            exit 1
+          fi
+          echo "✅ All jobs completed successfully or were skipped"
       - name: Mark updated Dependabot commit of devcontainer hash as succeeded
         if: needs.get-values.outputs.dependabot-commit-created == 'true'
         env:

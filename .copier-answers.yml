@@ -1,5 +1,5 @@
 # Changes here will be overwritten by Copier
-_commit: v0.0.84
+_commit: v0.0.93
 _src_path: gh:LabAutomationAndScreening/copier-base-template.git
 description: Managing an AWS Organization
 install_claude_cli: false
@@ -12,6 +12,8 @@ repo_org_name: LabAutomationAndScreening
 repo_org_name_for_copyright: LabAutomationAndScreening
 ssh_port_number: 51184
 template_might_want_to_install_aws_ssm_port_forwarding_plugin: false
+template_might_want_to_use_python_asyncio: false
+template_might_want_to_use_vcrpy: false
 template_uses_javascript: false
 template_uses_pulumi: true
 template_uses_python: true

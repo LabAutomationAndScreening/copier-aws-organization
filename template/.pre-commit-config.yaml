@@ -42,7 +42,7 @@ repos:
 
   # Reformatting (should generally come before any file format or other checks, because reformatting can change things)
   - repo: https://github.com/crate-ci/typos
-    rev: 6573587991823ef75e4d6ca97fe895f45e9f14e4  # frozen: v1
+    rev: b31d3aa6e8e43e6a9cf7a1d137baf189dec0922b  # frozen: v1
     hooks:
       - id: typos
         exclude: |
@@ -108,7 +108,7 @@ repos:
           )$
 
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: 5ba47274f9b181bce26a5150a725577f3c336011  # frozen: v3.6.2
+    rev: 14abee445aea04b39069c19b4bd54efff6775819  # frozen: v3.7.4
     hooks:
       - id: prettier
         # TODO: get template YAML and MD files more in line with prettier expectations so we can start using prettier on those too
@@ -192,15 +192,16 @@ repos:
           )$
       - id: check-xml
       - id: check-merge-conflict
+        args: ["--assume-in-merge"]
       - id: check-case-conflict
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 83b816d020105076daac266dbf6bfed199a2da93  # frozen: 0.34.1
+    rev: b035497fb64e3f9faa91e833331688cc185891e6  # frozen: 0.36.0
     hooks:
       - id: check-github-workflows
 
   - repo: https://github.com/maresb/check-json5
-    rev: 893a2b5a0a27c3540bd8fcafe2968ccc05237179 # 1.0
+    rev: bd4737432a2175617a9eeaa510ab369cbc1cbd3d  # frozen: v1.0.1
     hooks:
       - id: check-json5
         files: |
@@ -249,7 +250,7 @@ repos:
         description: Runs hadolint to lint Dockerfiles
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 3db93a2be6f214ed722bf7bce095ec1b1715422a  # frozen: v0.14.2
+    rev: 5ba58aca0bd5bc7c0e1c0fc45af2e88d6a2bde83  # frozen: v0.14.10
     hooks:
       - id: ruff
         name: ruff-src
@@ -257,7 +258,7 @@ repos:
         files: src/.+\.py$
         exclude: |
           (?x)^(
-              .*/graphql_codegen/.*|
+              .*/generated/graphql/.*|
               .*/generated/open[-_]api/.*|
               template/.*|
           )$
@@ -267,26 +268,26 @@ repos:
         files: tests?/.+\.py$
         exclude: |
           (?x)^(
-              .*/graphql_codegen/.*|
+              .*/generated/graphql/.*|
               .*/generated/open[-_]api/.*|
               template/.*|
           )$
       - id: ruff-format
         exclude: |
           (?x)^(
-              .*/graphql_codegen/.*|
+              .*/generated/graphql/.*|
               .*/generated/open[-_]api/.*|
           )$
 
   - repo: https://github.com/pylint-dev/pylint
-    rev: 0eb92d25fd38ba5bad2f8d2ea7df63ad23e18ae3  # frozen: v4.0.2
+    rev: e16f942166511d6fb4427e503a734152fae0c4fe  # frozen: v4.0.4
     hooks:
       - id: pylint
         name: pylint
         # exclude the template files---duplication within them will be discovered during CI of that template instantiation
         exclude: |
           (?x)^(
-              .*/graphql_codegen/.*|
+              .*/generated/graphql/.*|
               .*/generated/open[-_]api/.*|
               template/.*|
           )$
@@ -302,7 +303,7 @@ repos:
         files: '.+\.py$'
         exclude: |
           (?x)^(
-              .*/graphql_codegen/.*|
+              .*/generated/graphql/.*|
               .*/generated/open[-_]api/.*|
           )$
         # don't pass filenames else the command line sees them twice
