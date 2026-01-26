@@ -50,7 +50,6 @@ jobs:
     with:
       python-version: {% endraw %}{{ python_version }}{% raw %}
 
-
   pulumi-workflow:
     uses: ./.github/workflows/pulumi-aws.yml
     needs:
