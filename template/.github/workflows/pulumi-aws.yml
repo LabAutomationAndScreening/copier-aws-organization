@@ -124,7 +124,7 @@ jobs:
           python-version: ${{ inputs.PYTHON_VERSION }}
 
       - name: Download Artifact
-        uses: actions/download-artifact@v6.0.0
+        uses: actions/download-artifact@v7.0.0
         if: ${{ inputs.DOWNLOAD_ARTIFACT_NAME != '' }}
         with:
           name: ${{ inputs.DOWNLOAD_ARTIFACT_NAME }}

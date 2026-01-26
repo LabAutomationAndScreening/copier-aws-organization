@@ -22,16 +22,6 @@ jobs:
     permissions:
       contents: write # needed for updating dependabot branches
 
-  lint:
-    needs: [ get-values ]
-    name: Pre-commit
-    uses: ./.github/workflows/pre-commit.yaml
-    permissions:
-      contents: write # needed for mutex
-      id-token: write # needed to assume OIDC roles (e.g. for downloading from CodeArtifact)
-    with:
-      python-version: {% endraw %}{{ python_version }}{% raw %}
-
   check-skip-duplicate:
     runs-on: {% endraw %}{{ gha_linux_runner }}{% raw %}
     permissions:
@@ -47,12 +37,29 @@ jobs:
       - id: check
         uses: ./.github/actions/check-skip-duplicates
 
+  lint:
+    needs:
+      - get-values
+      - check-skip-duplicate
+    if: needs.check-skip-duplicate.outputs.should-run == 'true'
+    name: Pre-commit
+    uses: ./.github/workflows/pre-commit.yaml
+    permissions:
+      contents: write # needed for mutex
+      id-token: write # needed to assume OIDC roles (e.g. for downloading from CodeArtifact)
+    with:
+      python-version: {% endraw %}{{ python_version }}{% raw %}
+
   pulumi-workflow:
     uses: ./.github/workflows/pulumi-aws.yml
-    needs: [ get-values, check-skip-duplicate ]
+    needs:
+      - get-values
+      - check-skip-duplicate
+    if: needs.check-skip-duplicate.outputs.should-run == 'true'
     permissions:
       id-token: write # needed to assume OIDC roles (e.g. for downloading from CodeArtifact)
       contents: write # needed for mutex
+      pull-requests: write # needed to potentially post the preview on the PR as a comment
     with:
       AWS_REGION: {% endraw %}{{ aws_region_for_stack }}{% raw %}
       PULUMI_STACK_NAME: {% endraw %}{{ pulumi_stack_name }}{% raw %}
@@ -70,23 +77,49 @@ jobs:
     timeout-minutes: {% endraw %}{{ gha_short_timeout_minutes }}{% raw %}
     needs:
       - get-values
+      - lint
       - check-skip-duplicate
       - pulumi-workflow
     permissions:
       statuses: write # needed for updating status on Dependabot PRs
     if: always()
     steps:
+      - name: Set status for duplicate detection
+        if: needs.check-skip-duplicate.outputs.should-run != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api \
+            -X POST -H "Accept: application/vnd.github.v3+json" \
+            "/repos/${{ github.repository }}/statuses/${{ github.sha }}" \
+            -f state=pending -f context="required-check" -f description="⏭️ Workflow skipped due to duplicate detection"
+          echo "⏭️ Workflow was skipped due to duplicate detection - status set to pending to block merge"
+          exit 0
+
       - name: fail if prior job failure
         run: |
           failure_pattern="^(failure|cancelled)$"
 
           if [[ "${{ needs.check-skip-duplicate.result }}" =~ $failure_pattern ]] ||
+             [[ "${{ needs.lint.result }}" =~ $failure_pattern ]] ||
              [[ "${{ needs.pulumi-workflow.result }}" =~ $failure_pattern ]] ||
              [[ "${{ needs.get-values.result }}" =~ $failure_pattern ]]; then
             echo "❌ One or more jobs failed or were cancelled"
             exit 1
           fi
           echo "✅ All jobs completed successfully or were skipped"
+
+      - name: Mark required-check as succeeded
+        if: needs.check-skip-duplicate.outputs.should-run == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api \
+            -X POST -H "Accept: application/vnd.github.v3+json" \
+            "/repos/${{ github.repository }}/statuses/${{ github.sha }}" \
+            -f state=success -f context="required-check" -f description="✅ All required checks passed" \
+            -f target_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
       - name: Mark updated Dependabot commit of devcontainer hash as succeeded
         if: needs.get-values.outputs.dependabot-commit-created == 'true'
         env:
