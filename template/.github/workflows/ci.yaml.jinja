@@ -22,17 +22,6 @@ jobs:
     permissions:
       contents: write # needed for updating dependabot branches
 
-  lint:
-    needs:
-      - get-values
-    name: Pre-commit
-    uses: ./.github/workflows/pre-commit.yaml
-    permissions:
-      contents: write # needed for mutex
-      id-token: write # needed to assume OIDC roles (e.g. for downloading from CodeArtifact)
-    with:
-      python-version: {% endraw %}{{ python_version }}{% raw %}
-
   check-skip-duplicate:
     runs-on: {% endraw %}{{ gha_linux_runner }}{% raw %}
     permissions:
@@ -47,6 +36,20 @@ jobs:
           persist-credentials: false
       - id: check
         uses: ./.github/actions/check-skip-duplicates
+
+  lint:
+    needs:
+      - get-values
+      - check-skip-duplicate
+    if: needs.check-skip-duplicate.outputs.should-run == 'true'
+    name: Pre-commit
+    uses: ./.github/workflows/pre-commit.yaml
+    permissions:
+      contents: write # needed for mutex
+      id-token: write # needed to assume OIDC roles (e.g. for downloading from CodeArtifact)
+    with:
+      python-version: {% endraw %}{{ python_version }}{% raw %}
+
 
   pulumi-workflow:
     uses: ./.github/workflows/pulumi-aws.yml
