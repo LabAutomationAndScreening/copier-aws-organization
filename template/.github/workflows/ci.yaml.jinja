@@ -55,6 +55,7 @@ jobs:
     needs:
       - get-values
       - check-skip-duplicate
+      - lint
     if: needs.check-skip-duplicate.outputs.should-run == 'true'
     permissions:
       id-token: write # needed to assume OIDC roles (e.g. for downloading from CodeArtifact)
