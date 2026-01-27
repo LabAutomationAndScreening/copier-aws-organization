@@ -98,7 +98,7 @@ jobs:
           fi
           echo "✅ All jobs completed successfully or were skipped"
 
-      - name: Mark the required-check from the job triggered by the push as succeeded so the PR can be merged
+      - name: Mark the required-check as succeeded so the PR can be merged
         if: ${{ github.event_name == 'pull_request' }}
         env:
           GH_TOKEN: ${{ github.token }}
