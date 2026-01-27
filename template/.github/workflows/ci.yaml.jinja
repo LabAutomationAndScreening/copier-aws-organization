@@ -109,15 +109,15 @@ jobs:
           fi
           echo "✅ All jobs completed successfully or were skipped"
 
-      - name: Mark required-check as succeeded
-        if: needs.check-skip-duplicate.outputs.should-run == 'true'
+      - name: Mark the required-check from the job triggered by the push as succeeded so the PR can be merged
+        if: ${{ github.event_name == 'pull_request' && needs.check-skip-duplicate.outputs.should-run == 'true'}}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh api \
             -X POST -H "Accept: application/vnd.github.v3+json" \
-            "/repos/${{ github.repository }}/statuses/${{ github.sha }}" \
-            -f state=success -f context="required-check" -f description="✅ All required checks passed" \
+            "/repos/${{ github.repository }}/statuses/${{ github.event.after }}" \
+            -f state=success -f context="required-check" -f description="✅ All required checks passed in the job triggered by pull_request" \
             -f target_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
       - name: Mark updated Dependabot commit of devcontainer hash as succeeded
