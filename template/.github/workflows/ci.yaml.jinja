@@ -55,6 +55,7 @@ jobs:
     needs:
       - get-values
       - check-skip-duplicate
+      - lint
     if: needs.check-skip-duplicate.outputs.should-run == 'true'
     permissions:
       id-token: write # needed to assume OIDC roles (e.g. for downloading from CodeArtifact)
@@ -72,7 +73,7 @@ jobs:
       AWS_ACCOUNT_ID: "{% endraw %}{{ aws_production_account_id }}{% raw %}"
       SHOW_PREVIEW_COMMENT_ON_PR: ${{ github.event_name == 'pull_request' }}
 
-  required-check:
+  workflow-summary:
     runs-on: {% endraw %}{{ gha_linux_runner }}{% raw %}
     timeout-minutes: {% endraw %}{{ gha_short_timeout_minutes }}{% raw %}
     needs:
@@ -81,21 +82,9 @@ jobs:
       - check-skip-duplicate
       - pulumi-workflow
     permissions:
-      statuses: write # needed for updating status on Dependabot PRs
+      statuses: write # needed for updating status on PRs
     if: always()
     steps:
-      - name: Set status for duplicate detection
-        if: needs.check-skip-duplicate.outputs.should-run != 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh api \
-            -X POST -H "Accept: application/vnd.github.v3+json" \
-            "/repos/${{ github.repository }}/statuses/${{ github.sha }}" \
-            -f state=pending -f context="required-check" -f description="⏭️ Workflow skipped due to duplicate detection"
-          echo "⏭️ Workflow was skipped due to duplicate detection - status set to pending to block merge"
-          exit 0
-
       - name: fail if prior job failure
         run: |
           failure_pattern="^(failure|cancelled)$"
@@ -109,15 +98,15 @@ jobs:
           fi
           echo "✅ All jobs completed successfully or were skipped"
 
-      - name: Mark required-check as succeeded
-        if: needs.check-skip-duplicate.outputs.should-run == 'true'
+      - name: Mark the required-check as succeeded so the PR can be merged
+        if: ${{ github.event_name == 'pull_request' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh api \
             -X POST -H "Accept: application/vnd.github.v3+json" \
-            "/repos/${{ github.repository }}/statuses/${{ github.sha }}" \
-            -f state=success -f context="required-check" -f description="✅ All required checks passed" \
+            "${{ github.event.pull_request.statuses_url }}" \
+            -f state=success -f context="required-check" -f description="✅ All required checks passed in the job triggered by pull_request" \
             -f target_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
       - name: Mark updated Dependabot commit of devcontainer hash as succeeded
