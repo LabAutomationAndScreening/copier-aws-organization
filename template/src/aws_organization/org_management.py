@@ -1,6 +1,10 @@
-from lab_auto_pulumi import UserInfo  # noqa: F401 # remove this noqa when first used
+from lab_auto_pulumi import UserInfo
+from pydantic import BaseModel
 
-from .lib import OrgAdmin
+
+class OrgAdmin(BaseModel):
+    user_info: UserInfo
+    enable_break_glass_access: bool = False
 
 
 def get_org_admins() -> list[OrgAdmin]:
@@ -9,7 +13,7 @@ def get_org_admins() -> list[OrgAdmin]:
     Example:
     ```
     org_admins: list[OrgAdmin] = [
-        OrgAdmin(user_info=UserInfo(username="eli.fine@lab-sync.com"), enable_break_glass_access=False),
+        OrgAdmin(user_info=UserInfo(username="eli.fine@elifine.com"), enable_break_glass_access=False),
         OrgAdmin(user_info=UserInfo(username="mal.reynolds@firefly.star")),
     ]
     ```
