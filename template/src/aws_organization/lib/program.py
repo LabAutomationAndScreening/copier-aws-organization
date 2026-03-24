@@ -50,12 +50,16 @@ def pulumi_program() -> None:
     )
     management_account_info = AwsAccountInfo(name="management-account", id=get_aws_account_id())
     org_admins = get_org_admins()
-    for perm_set in (org_admin_access, org_admin_view_access):
-        _ = AwsSsoPermissionSetAccountAssignments(
-            permission_set=perm_set,
-            users=org_admins,
-            account_info=management_account_info,
-        )
+    _ = AwsSsoPermissionSetAccountAssignments(
+        permission_set=org_admin_view_access,
+        users=[admin.user_info for admin in org_admins],
+        account_info=management_account_info,
+    )
+    _ = AwsSsoPermissionSetAccountAssignments(
+        permission_set=org_admin_access,
+        users=[admin.user_info for admin in org_admins if admin.enable_break_glass_access],
+        account_info=management_account_info,
+    )
 
     common_workload_kwargs, enable_service_access = create_central_infra_workload(org_units)
     identity_center_delegate_workload = AwsWorkload(
