@@ -236,57 +236,59 @@ def create_central_infra_workload(org_units: OrganizationalUnits) -> tuple[Commo
             create_pulumi_kms_role_policy_args(kms_key_arn),
             iam.RolePolicyArgs(
                 policy_document=central_state_bucket.bucket_name.apply(
-                    lambda bucket_name: get_policy_document(
-                        statements=[
-                            GetPolicyDocumentStatementArgs(
-                                sid="CreateMetadataAndLocks",
-                                effect="Allow",
-                                actions=[
-                                    "s3:PutObject",
-                                ],
-                                resources=[f"arn:aws:s3:::{bucket_name}/${{aws:PrincipalAccount}}/*"],
-                            ),
-                            GetPolicyDocumentStatementArgs(
-                                sid="RemoveLock",
-                                effect="Allow",
-                                actions=[
-                                    "s3:DeleteObject",
-                                    "s3:DeleteObjectVersion",
-                                ],
-                                resources=[
-                                    f"arn:aws:s3:::{bucket_name}/${{aws:PrincipalAccount}}/*/.pulumi/locks/*.json"
-                                ],
-                            ),
-                            GetPolicyDocumentStatementArgs(
-                                sid="ListAllSecrets",
-                                effect="Allow",
-                                resources=["*"],
-                                actions=[
-                                    "secretsmanager:ListSecrets",  # when trying to use `secretsmanager:Name` and `secretsmanager:SecretId` to restrict this, it wouldn't let any be listed
-                                ],
-                            ),
-                            GetPolicyDocumentStatementArgs(  # TODO: deprecate and remove this in favor of the more general preview secrets path below
-                                sid="ReadGithubPreviewSecret",
-                                effect="Allow",
-                                actions=[
-                                    "secretsmanager:GetSecretValue",
-                                ],
-                                resources=[
-                                    f"arn:aws:secretsmanager:{pulumi_aws.config.region}:*:secret:{GITHUB_PREVIEW_TOKEN_SECRET_NAME}-*"  # TODO: lock down account
-                                ],
-                            ),
-                            GetPolicyDocumentStatementArgs(
-                                sid="ReadSecretsForPreviewTokensForIaC",
-                                effect="Allow",
-                                actions=[
-                                    "secretsmanager:GetSecretValue",
-                                ],
-                                resources=[
-                                    f"arn:aws:secretsmanager:{pulumi_aws.config.region}:*:secret:{MANUAL_IAC_SECRETS_PREFIX}/preview-tokens/*"  # TODO: lock down account
-                                ],
-                            ),
-                        ]
-                    ).json
+                    lambda bucket_name: (
+                        get_policy_document(
+                            statements=[
+                                GetPolicyDocumentStatementArgs(
+                                    sid="CreateMetadataAndLocks",
+                                    effect="Allow",
+                                    actions=[
+                                        "s3:PutObject",
+                                    ],
+                                    resources=[f"arn:aws:s3:::{bucket_name}/${{aws:PrincipalAccount}}/*"],
+                                ),
+                                GetPolicyDocumentStatementArgs(
+                                    sid="RemoveLock",
+                                    effect="Allow",
+                                    actions=[
+                                        "s3:DeleteObject",
+                                        "s3:DeleteObjectVersion",
+                                    ],
+                                    resources=[
+                                        f"arn:aws:s3:::{bucket_name}/${{aws:PrincipalAccount}}/*/.pulumi/locks/*.json"
+                                    ],
+                                ),
+                                GetPolicyDocumentStatementArgs(
+                                    sid="ListAllSecrets",
+                                    effect="Allow",
+                                    resources=["*"],
+                                    actions=[
+                                        "secretsmanager:ListSecrets",  # when trying to use `secretsmanager:Name` and `secretsmanager:SecretId` to restrict this, it wouldn't let any be listed
+                                    ],
+                                ),
+                                GetPolicyDocumentStatementArgs(  # TODO: deprecate and remove this in favor of the more general preview secrets path below
+                                    sid="ReadGithubPreviewSecret",
+                                    effect="Allow",
+                                    actions=[
+                                        "secretsmanager:GetSecretValue",
+                                    ],
+                                    resources=[
+                                        f"arn:aws:secretsmanager:{pulumi_aws.config.region}:*:secret:{GITHUB_PREVIEW_TOKEN_SECRET_NAME}-*"  # TODO: lock down account
+                                    ],
+                                ),
+                                GetPolicyDocumentStatementArgs(
+                                    sid="ReadSecretsForPreviewTokensForIaC",
+                                    effect="Allow",
+                                    actions=[
+                                        "secretsmanager:GetSecretValue",
+                                    ],
+                                    resources=[
+                                        f"arn:aws:secretsmanager:{pulumi_aws.config.region}:*:secret:{MANUAL_IAC_SECRETS_PREFIX}/preview-tokens/*"  # TODO: lock down account
+                                    ],
+                                ),
+                            ]
+                        ).json
+                    )
                 ),
                 policy_name="StateBucketWrite",
             ),
