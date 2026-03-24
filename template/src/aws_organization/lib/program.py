@@ -5,11 +5,13 @@ from ephemeral_pulumi_deploy import get_config
 from lab_auto_pulumi import AwsAccountInfo
 from lab_auto_pulumi import AwsSsoPermissionSet
 from lab_auto_pulumi import AwsSsoPermissionSetAccountAssignments
+from lab_auto_pulumi import UserInfo
 from pulumi import ResourceOptions
 from pulumi import export
 from pulumi_aws.organizations import DelegatedAdministrator
 from pulumi_aws.organizations import DelegatedAdministratorArgs
 from pulumi_command.local import Command
+from pydantic import BaseModel
 
 from ..org_management import get_org_admins
 from ..workloads import create_workloads
@@ -19,6 +21,11 @@ from .org_units import create_organizational_units
 from .workload import AwsWorkload
 
 logger = logging.getLogger(__name__)
+
+
+class OrgAdmin(BaseModel):
+    user_info: UserInfo
+    enable_break_glass_access: bool = False
 
 
 def pulumi_program() -> None:
@@ -50,12 +57,16 @@ def pulumi_program() -> None:
     )
     management_account_info = AwsAccountInfo(name="management-account", id=get_aws_account_id())
     org_admins = get_org_admins()
-    for perm_set in (org_admin_access, org_admin_view_access):
-        _ = AwsSsoPermissionSetAccountAssignments(
-            permission_set=perm_set,
-            users=org_admins,
-            account_info=management_account_info,
-        )
+    _ = AwsSsoPermissionSetAccountAssignments(
+        permission_set=org_admin_view_access,
+        users=[admin.user_info for admin in org_admins],
+        account_info=management_account_info,
+    )
+    _ = AwsSsoPermissionSetAccountAssignments(
+        permission_set=org_admin_access,
+        users=[admin.user_info for admin in org_admins if admin.enable_break_glass_access],
+        account_info=management_account_info,
+    )
 
     common_workload_kwargs, enable_service_access = create_central_infra_workload(org_units)
     identity_center_delegate_workload = AwsWorkload(
