@@ -11,6 +11,7 @@ from typing import Any
 
 REPO_ROOT_DIR = Path(__file__).parent.parent.resolve()
 ENVS_CONFIG = REPO_ROOT_DIR / ".devcontainer" / "envs.json"
+PULUMI_CLI_INSTALL_SCRIPT = REPO_ROOT_DIR / ".devcontainer" / "install-pulumi-cli.sh"
 UV_PYTHON_ALREADY_CONFIGURED = "UV_PYTHON" in os.environ
 parser = argparse.ArgumentParser(description="Manual setup for dependencies in the repo")
 _ = parser.add_argument(
@@ -43,6 +44,12 @@ _ = parser.add_argument(
     action="store_true",
     default=False,
     help="Allow uv to install new versions of Python on the fly. This is typically only needed when instantiating the copier template.",
+)
+_ = parser.add_argument(
+    "--skip-installing-pulumi-cli",
+    action="store_true",
+    default=False,
+    help="Do not install the Pulumi CLI even if the lock file references it",
 )
 
 
@@ -127,6 +134,22 @@ def main():
                     check=True,
                     env=uv_env,
                 )
+            if (
+                not generate_lock_file_only
+                and not args.skip_installing_pulumi_cli
+                and platform.system() == "Linux"
+                and env.lock_file.exists()
+                and '"pulumi"' in env.lock_file.read_text()
+            ):
+                if not PULUMI_CLI_INSTALL_SCRIPT.exists():
+                    print(
+                        f"Pulumi CLI install script not found at {PULUMI_CLI_INSTALL_SCRIPT}, skipping Pulumi CLI installation"
+                    )
+                else:
+                    _ = subprocess.run(
+                        ["sh", str(PULUMI_CLI_INSTALL_SCRIPT), str(env.lock_file)],
+                        check=True,
+                    )
         elif env.package_manager == PackageManager.PNPM:
             pnpm_command = ["pnpm", "install", "--dir", str(env.path)]
             if env_check_lock:

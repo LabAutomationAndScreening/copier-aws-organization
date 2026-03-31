@@ -4,17 +4,16 @@ on:
   push:
     branches-ignore:
       - 'gh-readonly-queue/**' # don't run (again) when on these special branches created during merge groups; the `on: merge_group` already triggers it.
-  pull_request:
-    branches-ignore:
-      - 'gh-readonly-queue/**' # don't run (again) when on these special branches created during merge groups; the `on: merge_group` already triggers it.
   merge_group:
+  pull_request:
 
 env:
   PYTHONUNBUFFERED: True
   PRE_COMMIT_HOME: ${{ github.workspace }}/.precommit_cache
 
 permissions:
-    id-token: write # needed to assume OIDC roles (e.g. for downloading from CodeArtifact)
+  id-token: write # needed to assume OIDC roles (e.g. for downloading from CodeArtifact)
+  contents: read # need to explicitly provide this whenever defining permissions because the default value is 'none' for anything not explicitly set when permissions are defined
 
 jobs:
   get-values:
@@ -24,6 +23,7 @@ jobs:
 
   check-skip-duplicate:
     runs-on: {% endraw %}{{ gha_linux_runner }}{% raw %}
+    timeout-minutes: {% endraw %}{{ gha_short_timeout_minutes }}{% raw %}
     permissions:
       contents: read
       pull-requests: read # needed to check if PR exists for current branch
@@ -73,33 +73,39 @@ jobs:
       AWS_ACCOUNT_ID: "{% endraw %}{{ aws_production_account_id }}{% raw %}"
       SHOW_PREVIEW_COMMENT_ON_PR: ${{ github.event_name == 'pull_request' }}
 
+  confirm-on-tagged-copier-template:
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+    uses: ./.github/workflows/confirm-on-tagged-copier-template.yaml
+
   workflow-summary:
     runs-on: {% endraw %}{{ gha_linux_runner }}{% raw %}
     timeout-minutes: {% endraw %}{{ gha_short_timeout_minutes }}{% raw %}
     needs:
       - get-values
-      - lint
       - check-skip-duplicate
+      - lint
       - pulumi-workflow
+      - confirm-on-tagged-copier-template
     permissions:
-      statuses: write # needed for updating status on PRs
+      statuses: write # needed for updating status on Dependabot PRs
     if: always()
     steps:
       - name: fail if prior job failure
         run: |
-          failure_pattern="^(failure|cancelled)$"
+          success_pattern="^(skipped|success)$" # these are the possibilities: https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#needs-context
 
-          if [[ "${{ needs.check-skip-duplicate.result }}" =~ $failure_pattern ]] ||
-             [[ "${{ needs.lint.result }}" =~ $failure_pattern ]] ||
-             [[ "${{ needs.pulumi-workflow.result }}" =~ $failure_pattern ]] ||
-             [[ "${{ needs.get-values.result }}" =~ $failure_pattern ]]; then
-            echo "❌ One or more jobs failed or were cancelled"
+          if [[ ! "${{ needs.get-values.result }}" =~ $success_pattern ]] ||
+            [[ ! "${{ needs.check-skip-duplicate.result }}" =~ $success_pattern ]] ||
+            [[ ! "${{ needs.lint.result }}" =~ $success_pattern ]] ||
+            [[ ! "${{ needs.pulumi-workflow.result }}" =~ $success_pattern ]] ||
+            [[ ! "${{ needs.confirm-on-tagged-copier-template.result }}" =~ $success_pattern ]]; then
+            echo "❌ One or more jobs did not finish with skipped or success"
             exit 1
           fi
-          echo "✅ All jobs completed successfully or were skipped"
+          echo "✅ All jobs finished with skipped or success"
 
       - name: Mark the required-check as succeeded so the PR can be merged
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -109,7 +115,7 @@ jobs:
             -f state=success -f context="required-check" -f description="✅ All required checks passed in the job triggered by pull_request" \
             -f target_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
-      - name: Mark updated Dependabot commit of devcontainer hash as succeeded
+      - name: Mark updated dependabot hash commit as succeeded
         if: needs.get-values.outputs.dependabot-commit-created == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
