@@ -1,4 +1,12 @@
-{% raw %}[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+{#
+ ============== WARNING ==============================================================================
+ File is managed by copier template: gh:LabAutomationAndScreening/copier-base-template.git
+ See .config/.copier-managed-files.json for details.
+
+ You are welcome to make changes to this file in your repo if they are custom to your project,
+ but if the change should be shared with other projects, please backport it to the template repo.
+ =====================================================================================================
+#}{% raw %}[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![Copier](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/copier-org/copier/master/img/badge/badge-black.json)](https://github.com/copier-org/copier)
 [![Actions status](https://www.github.com/{% endraw %}{{ repo_org_name }}/{{ repo_name }}{% raw %}/actions/workflows/ci.yaml/badge.svg?branch=main)](https://www.github.com/{% endraw %}{{ repo_org_name }}/{{ repo_name }}{% raw %}/actions)
 [![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://www.github.com/{% endraw %}{{ repo_org_name }}/{{ repo_name }}{% raw %})
@@ -25,4 +33,4 @@ uv run python -m aws_organization.lib.pulumi_deploy --stack={% endraw %}{{ pulum
 
 ## Updating from the template
 This repository uses a copier template. To pull in the latest updates from the template, use the command:
-`copier update --trust --conflict rej --defaults`{% endraw %}
+`copier update --answers-file .config/.copier-answers.yml --trust --conflict rej --defaults`{% endraw %}

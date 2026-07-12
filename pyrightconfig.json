@@ -17,6 +17,7 @@
     "**/.venv",
     "**/venv",
     "**/copier_template_resources",
+    "**/mutants",
     "**/.claude/plugins"
   ],
   "strictListInference": true,
