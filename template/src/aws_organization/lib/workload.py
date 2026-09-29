@@ -1,5 +1,4 @@
 import logging
-from typing import TypedDict
 
 from ephemeral_pulumi_deploy.utils import common_tags
 from ephemeral_pulumi_deploy.utils import common_tags_native
@@ -17,6 +16,7 @@ from pulumi_aws_native import ProviderAssumeRoleArgs
 from pulumi_aws_native import iam
 from pulumi_aws_native import organizations
 from pulumi_aws_native import ssm
+from typing_extensions import TypedDict
 
 from .account import AwsAccount
 from .constants import CENTRAL_INFRA_REPO_NAME
@@ -189,7 +189,7 @@ class AwsWorkload(ComponentResource):
         return tuple(self.prod_accounts + self.staging_accounts + self.dev_accounts)
 
 
-class CommonWorkloadKwargs(TypedDict):
+class CommonWorkloadKwargs(TypedDict, closed=True):
     central_infra_account: AwsAccount
     deploy_in_workload_account_assume_role_policy: Output[GetPolicyDocumentResult]
     preview_in_workload_account_assume_role_policy: Output[GetPolicyDocumentResult]
