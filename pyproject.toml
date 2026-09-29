@@ -18,11 +18,10 @@ dependencies = [
     # Managed by upstream template
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
-    "pytest-randomly>=4.1.0",
-    "faker>=40.28.1",
-    "pyright[nodejs]>=1.1.411",
-    "pyrefly>=1.1.1",
-    "copier==9.16.0",
+    "pytest-randomly>=5.0.0",
+    "faker>=40.39.0",
+    "pyrefly>=1.3.1",
+    "copier==9.18.2",
     "copier-template-extensions==0.3.3"
 ]
 

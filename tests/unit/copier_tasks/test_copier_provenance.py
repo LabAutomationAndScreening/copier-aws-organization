@@ -8,6 +8,8 @@
 import json
 import subprocess
 from pathlib import Path
+from typing import NotRequired
+from typing import TypedDict
 
 import pytest
 from faker import Faker
@@ -16,6 +18,25 @@ from .helpers import SCRIPT_PATH_ROOT
 from .helpers import run_copier_task
 
 _SCRIPT_PATH = SCRIPT_PATH_ROOT / "copier_provenance.py"
+
+
+# The manifest shape is declared here rather than imported from the task module: the scripts live at a
+# different import path in child templates (see helpers.SCRIPT_PATH_ROOT), and the test should assert
+# against the JSON contract independently of the implementation's own definition.
+class _TemplateEntry(TypedDict):
+    src: str
+    parent_src: NotRequired[str]
+    managed_files: list[str]
+
+
+class _Manifest(TypedDict):
+    templates: list[_TemplateEntry]
+
+
+def _read_manifest(repo_dir: Path) -> _Manifest:
+    manifest: _Manifest = json.loads((repo_dir / ".config" / ".copier-managed-files.json").read_text(encoding="utf-8"))
+    return manifest
+
 
 expected_hash_comment = """\
 # ============== WARNING ==============================================================================
@@ -71,7 +92,7 @@ def _run_script(
     template_src: str = "",
 ) -> subprocess.CompletedProcess[str]:
     args = [str(src_template_dir), str(dst_dir)]
-    if template_src:
+    if template_src != "":
         args += ["--template-src", template_src]
     result = run_copier_task(_SCRIPT_PATH, *args)
     assert result.returncode == 0, result.stderr
@@ -161,6 +182,48 @@ class TestJinjaTemplateMatching:
 
         content = (backend_src / "__init__.py").read_text(encoding="utf-8")
         assert content.startswith(expected_hash_comment)
+
+
+class TestWhenTaskRunAgainstDestination:
+    def test_Given_symlink_cycle__Then_managed_file_stamped(self, tmp_path: Path) -> None:
+        # Two links back to the root rather than one: a single link is bounded by the kernel's ELOOP
+        # limit, so it would terminate on its own and catch no regression.
+        template_dir = tmp_path / "template"
+        template_dir.mkdir()
+        (template_dir / "README.md.jinja-base").touch()
+
+        dst_dir = tmp_path / "destination"
+        node_modules = dst_dir / "node_modules"
+        node_modules.mkdir(parents=True)
+        (node_modules / "pkg-a").symlink_to(dst_dir, target_is_directory=True)
+        (node_modules / "pkg-b").symlink_to(dst_dir, target_is_directory=True)
+        file_content = "some content\n"
+        _ = (dst_dir / "README.md").write_text(file_content, encoding="utf-8")
+
+        _ = _run_script(src_template_dir=template_dir, dst_dir=dst_dir)
+
+        content = (dst_dir / "README.md").read_text(encoding="utf-8")
+        assert content == file_content + "\n" + expected_markdown_comment + "\n"
+
+    def test_Given_broken_symlink_at_managed_path__Then_path_skipped(self, tmp_path: Path) -> None:
+        template_dir = tmp_path / "template"
+        template_dir.mkdir()
+        (template_dir / "config.yaml.jinja-base").touch()
+        (template_dir / "keep.yaml.jinja-base").touch()
+
+        dst_dir = tmp_path / "destination"
+        dst_dir.mkdir()
+        broken = dst_dir / "config.yaml"
+        broken.symlink_to(dst_dir / "does-not-exist.yaml")
+        _ = (dst_dir / "keep.yaml").write_text("key: value\n", encoding="utf-8")
+        assert broken.is_symlink()
+
+        _ = _run_script(src_template_dir=template_dir, dst_dir=dst_dir)
+
+        manifest = _read_manifest(dst_dir)
+
+        assert (dst_dir / "keep.yaml").read_text(encoding="utf-8").startswith(expected_hash_comment)
+        assert manifest["templates"][0]["managed_files"] == ["keep.yaml"]
 
 
 class TestFileExtensionComments:
@@ -442,7 +505,7 @@ class TestManifest:
             template_src="https://github.com/org/base-template",
         )
 
-        manifest = json.loads((dst_dir / ".config" / ".copier-managed-files.json").read_text(encoding="utf-8"))
+        manifest = _read_manifest(dst_dir)
         assert len(manifest["templates"]) == 1
         entry = manifest["templates"][0]
         assert entry["src"] == "https://github.com/org/base-template"
@@ -468,7 +531,7 @@ class TestManifest:
             template_src="https://github.com/org/base-template",
         )
 
-        manifest = json.loads((dst_dir / ".config" / ".copier-managed-files.json").read_text(encoding="utf-8"))
+        manifest = _read_manifest(dst_dir)
         assert len(manifest["templates"]) == 1
 
     def test_manifest_layering_preserves_other_template_entries(self, tmp_path: Path) -> None:
@@ -491,7 +554,7 @@ class TestManifest:
             template_src="https://github.com/org/child-template",
         )
 
-        manifest = json.loads((dst_dir / ".config" / ".copier-managed-files.json").read_text(encoding="utf-8"))
+        manifest = _read_manifest(dst_dir)
         srcs = [t["src"] for t in manifest["templates"]]
         assert "https://github.com/org/base-template" in srcs
         assert "https://github.com/org/child-template" in srcs
@@ -522,7 +585,7 @@ class TestManifest:
             template_src="https://github.com/org/child-template",
         )
 
-        manifest = json.loads((dst_dir / ".config" / ".copier-managed-files.json").read_text(encoding="utf-8"))
+        manifest = _read_manifest(dst_dir)
         assert len(manifest["templates"]) == expected_num_manifests_in_project
         base = next(t for t in manifest["templates"] if "base" in t["src"])
         assert "a.txt" in base["managed_files"]
@@ -540,7 +603,7 @@ class TestManifest:
             template_src="https://github.com/org/my-template",
         )
 
-        manifest = json.loads((dst_dir / ".config" / ".copier-managed-files.json").read_text(encoding="utf-8"))
+        manifest = _read_manifest(dst_dir)
         entry = manifest["templates"][0]
         assert entry["src"] == "https://github.com/org/my-template"
 
@@ -559,7 +622,7 @@ class TestManifest:
             template_src="https://github.com/org/my-template",
         )
 
-        manifest = json.loads((dst_dir / ".config" / ".copier-managed-files.json").read_text(encoding="utf-8"))
+        manifest = _read_manifest(dst_dir)
         assert isinstance(manifest["templates"], list)
         for entry in manifest["templates"]:
             assert isinstance(entry["src"], str)
@@ -585,8 +648,9 @@ class TestManifest:
             template_src="https://github.com/org/child-template",
         )
 
-        manifest = json.loads((dst_dir / ".config" / ".copier-managed-files.json").read_text(encoding="utf-8"))
+        manifest = _read_manifest(dst_dir)
         entry = manifest["templates"][0]
+        assert "parent_src" in entry
         assert entry["parent_src"] == "https://github.com/org/parent-template"
 
     def test_manifest_parent_src_falls_back_to_root_copier_answers(self, tmp_path: Path) -> None:
@@ -606,8 +670,9 @@ class TestManifest:
             template_src="https://github.com/org/child-template",
         )
 
-        manifest = json.loads((dst_dir / ".config" / ".copier-managed-files.json").read_text(encoding="utf-8"))
+        manifest = _read_manifest(dst_dir)
         entry = manifest["templates"][0]
+        assert "parent_src" in entry
         assert entry["parent_src"] == "https://github.com/org/parent-template"
 
     def test_manifest_no_parent_src_when_no_copier_answers(self, tmp_path: Path) -> None:
@@ -623,7 +688,7 @@ class TestManifest:
             template_src="https://github.com/org/root-template",
         )
 
-        manifest = json.loads((dst_dir / ".config" / ".copier-managed-files.json").read_text(encoding="utf-8"))
+        manifest = _read_manifest(dst_dir)
         entry = manifest["templates"][0]
         assert entry["src"] == "https://github.com/org/root-template"
         assert "parent_src" not in entry
@@ -660,7 +725,7 @@ class TestManifest:
             template_src="https://github.com/org/child-template",
         )
 
-        manifest = json.loads((dst_dir / ".config" / ".copier-managed-files.json").read_text(encoding="utf-8"))
+        manifest = _read_manifest(dst_dir)
         srcs = {t["src"]: t for t in manifest["templates"]}
         assert "https://github.com/org/base-template" in srcs
         assert "https://github.com/org/child-template" in srcs
@@ -703,10 +768,10 @@ class TestManifest:
             template_src="https://github.com/org/child-template",
         )
 
-        manifest = json.loads((dst_dir / ".config" / ".copier-managed-files.json").read_text(encoding="utf-8"))
+        manifest = _read_manifest(dst_dir)
         srcs = {t["src"]: t for t in manifest["templates"]}
         assert "README.md" in srcs["https://github.com/org/base-template"]["managed_files"]
-        assert "README.md" not in srcs.get("https://github.com/org/child-template", {}).get("managed_files", [])
+        assert "README.md" not in srcs["https://github.com/org/child-template"]["managed_files"]
 
     def test_full_chain_base_child_final_attribution(self, tmp_path: Path) -> None:
         # Full 3-level chain: base stamps child (step 1), child stamps grandchild (step 2).
@@ -733,7 +798,7 @@ class TestManifest:
             dst_dir=child_repo,
             template_src="https://github.com/org/base-template",
         )
-        child_manifest = json.loads((child_repo / ".config" / ".copier-managed-files.json").read_text(encoding="utf-8"))
+        child_manifest = _read_manifest(child_repo)
         base_entry = next(t for t in child_manifest["templates"] if "base" in t["src"])
         assert "template/README.md.jinja" in base_entry["managed_files"]
 
@@ -748,7 +813,7 @@ class TestManifest:
             dst_dir=final_repo,
             template_src="https://github.com/org/child-template",
         )
-        final_manifest = json.loads((final_repo / ".config" / ".copier-managed-files.json").read_text(encoding="utf-8"))
+        final_manifest = _read_manifest(final_repo)
         srcs = {t["src"]: t for t in final_manifest["templates"]}
         assert "README.md" in srcs["https://github.com/org/base-template"]["managed_files"]
         assert "child_only.py" in srcs["https://github.com/org/child-template"]["managed_files"]
