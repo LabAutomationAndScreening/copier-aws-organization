@@ -33,10 +33,7 @@ ignore-errors-in-generated-code = true # not sure yet how effective this is
 no-access = "ignore" # (already covered by ruff SLF001)
 untyped-import = "ignore" # equivalent of reportMissingTypeStubs=false in pyright
 unannotated-return = "ignore" # ruff ANN2xx already requires this, but with suppress-none-returning so that None-returning functions don't need the noise. pyrefly has no equivalent option---the error kind is all-or-nothing.
-# The check keeps a distributed library's public API deliberate: consumers should only reach symbols the
-# package explicitly re-exports via __all__ or a redundant alias. This project is not a distributed library,
-# so every importer is in-repo and the __all__ bookkeeping buys nothing.
-implicit-reexport = "ignore"
+implicit-reexport = "ignore" # only matters for distributed libraries, whose public API must be deliberate; everything else is imported solely from within its own repo, where requiring __all__ or redundant aliases is pure bookkeeping
 
 [[sub-config]]
 matches = "../**/tests/**"

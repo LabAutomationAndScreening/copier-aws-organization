@@ -49,7 +49,7 @@ class ContextUpdater(ContextHook):
         context["fastapi_offline_version"] = ">=1.7.7"
         context["starlette_version"] = ">=1.7.0"
         context["uvicorn_version"] = ">=0.53.0"
-        context["lab_auto_pulumi_version"] = ">=0.2.3"
+        context["lab_auto_pulumi_version"] = ">=0.3.0"
         context["ariadne_codegen_version"] = ">=0.18.0"
         context["pytest_mock_version"] = ">=3.16.0"
         context["uuid_utils_version"] = ">=1.0.0"
@@ -65,7 +65,7 @@ class ContextUpdater(ContextHook):
         context["pytest_reserial_version"] = ">=0.6.1"
         context["python_faker_version"] = ">=40.39.0"
         context["mutmut_version"] = ">=3.8.0"
-        context["pyrefly_version"] = ">=1.3.1"
+        context["pyrefly_version"] = ">=1.3.2"
         context["vacuum_openapi_version"] = "0.30.0"
 
         context["default_node_version"] = "24.11.1"
