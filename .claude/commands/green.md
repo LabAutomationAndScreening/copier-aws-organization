@@ -19,7 +19,7 @@ GREEN PHASE! Apply the below to the user input above.
 - Write natural, descriptive code without meta-commentary about the development process
 - The code should speak for itself - TDD is the process, not the product
 
-Beads is available for task tracking. Use `mcp__beads__*` tools to manage issues (the user interacts via `bd` commands).
+Beads is available for task tracking. Use `bd` CLI commands to manage issues.
 
 ## Plan File Restriction
 
@@ -39,8 +39,9 @@ The foundation of TDD is the Red-Green-Refactor cycle:
 1. **Red Phase**: Write ONE failing test that describes desired behavior
 
    - The test must fail for the RIGHT reason (not syntax/import errors)
-   - Only one test at a time - this is critical for TDD discipline
-     - Exception: For browser-level tests or expensive setup (e.g., Storybook `*.stories.tsx`), group multiple assertions within a single test block to avoid redundant setup - but only when adding assertions to an existing interaction flow. If new user interactions are required, still create a new test. Split files by category if they exceed ~1000 lines.
+   - Only one new behavior at a time - this is critical for TDD discipline. "One test" means one new Given/When, not one assertion: write only enough to fail for the right reason, whether that lands in a new test block or as an assertion added to an existing one.
+     - Before writing a new test block, look for an existing test with the same Arrange and Act. If one exists, add the failing assertion there. A block that repeats another's setup and action is not more disciplined, just more setup to maintain, and it hides that both cover one behavior. Reserve a new block for a different precondition (Given) or a different action (When).
+   - Split test files by category if they exceed ~1000 lines
    - **Adding a single test to a test file is ALWAYS allowed** - no prior test output needed
    - Starting TDD for a new feature is always valid, even if test output shows unrelated work
    - For DOM-based tests, use `data-testid` attributes to select elements rather than CSS classes, tag names, or text content

@@ -1,0 +1,20 @@
+/*
+ * ============== WARNING ==============================================================================
+ * File is managed by copier template: gh:LabAutomationAndScreening/copier-base-template.git
+ * See .config/.copier-managed-files.json for details.
+ *
+ * You are welcome to make changes to this file in your repo if they are custom to your project,
+ * but if the change should be shared with other projects, please backport it to the template repo.
+ * =====================================================================================================
+ */
+{
+  // Edit permissions for specific files
+  // This should only ever be running in a devcontainer, so pretty lenient permissions are allowed
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    // A single leading slash anchors at the settings source, so absolute paths need the `//` prefix
+    "allow": ["Edit(//tmp/**)", "Edit(//workspaces/**/tmp/**)", "Edit(tmp/**)"],
+    // Agents are allowed to run any task, but this provides some basic protection against editing a task to do something nefarious that's normally forbidden.
+    "ask": ["Edit(Taskfile.yaml)", "Edit(.config/taskfiles/**)"],
+  },
+}
